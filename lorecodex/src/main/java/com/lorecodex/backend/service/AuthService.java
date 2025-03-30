@@ -1,4 +1,4 @@
 package com.lorecodex.backend.service;
 
-public class AuthService {
+public interface AuthService {
 }
