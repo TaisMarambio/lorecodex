@@ -7,6 +7,7 @@ WORKDIR /app
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle gradle
 COPY src src
+COPY .envEmpty .env
 
 # Damos permisos al script de Gradle Wrapper y construimos la aplicación
 RUN chmod +x ./gradlew

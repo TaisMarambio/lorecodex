@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15
-    container_name: lorecodex_db
+    container_name: lorecodexdb
     env_file:
       - .env
     ports:

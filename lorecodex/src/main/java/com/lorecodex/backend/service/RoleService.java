@@ -1,6 +1,7 @@
 package com.lorecodex.backend.service;
 
 import com.lorecodex.backend.model.Role;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
