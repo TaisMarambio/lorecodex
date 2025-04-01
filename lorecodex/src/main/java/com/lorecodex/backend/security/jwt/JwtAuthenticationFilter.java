@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,13 +40,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String jwt = authHeader.substring(7);
 
-        final String userEmail = jwtService.extractUserName(jwt); // extract username from token
+        final String userIdentifier = jwtService.extractUserName(jwt); // Puede ser username o email
 
-        // verify user exists and no previous authentication
-        if (StringUtils.hasText(userEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(userEmail);
+        if (StringUtils.hasText(userIdentifier) && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails;
+            try {
+                userDetails = userService.loadUserByUsername(userIdentifier);
+            } catch (UsernameNotFoundException e) {
+                userDetails = userService.loadUserByEmail(userIdentifier);
+            }
 
-            //verify if token is valid
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

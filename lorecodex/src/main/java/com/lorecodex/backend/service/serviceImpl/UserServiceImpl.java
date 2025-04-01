@@ -3,6 +3,8 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.UserService;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -47,5 +49,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Integer id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    }
+
+    @Override
+    public UserDetails loadUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 }
