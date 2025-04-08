@@ -44,9 +44,8 @@ public class SecurityConfig  {
         http.cors(withDefaults()) // Allow CORS
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/user/login", "/user/register").permitAll()
-                        .requestMatchers("/api/games/").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/user/**").permitAll()
+                        .requestMatchers("/api/games").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -62,6 +61,7 @@ public class SecurityConfig  {
         config.addAllowedHeader("*");
         config.addAllowedOriginPattern("*");
         config.setAllowCredentials(true);
+        config.addAllowedOrigin("http://localhost:8080");
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
