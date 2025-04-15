@@ -61,7 +61,7 @@ public class SecurityConfig  {
         config.addAllowedHeader("*");
         config.addAllowedOriginPattern("*");
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:8080");
+        config.addAllowedOrigin("http://localhost:5173");
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
