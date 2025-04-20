@@ -67,6 +67,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return createJwtResponse(user);  //generate JWT and return response
     }
 
+    public void createDefaultAdminIfNotExists() {
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                    .orElseGet(() -> {
+                        log.info("ROLE_ADMIN not found. Creating it automatically.");
+                        return roleRepository.save(new Role(null, "ROLE_ADMIN", null));
+                    });
+
+            Role userRole = roleRepository.findByName("ROLE_USER")
+                    .orElseGet(() -> {
+                        log.info("ROLE_USER not found. Creating it automatically.");
+                        return roleRepository.save(new Role(null, "ROLE_USER", null));
+                    });
+
+            var admin = User.builder()
+                    .username("admin")
+                    .email("admin@lorecodex.com")
+                    .password(passwordEncoder.encode("admin123"))
+                    .roles(Set.of(adminRole, userRole))
+                    .build();
+
+            userRepository.save(admin);
+            log.info("Default admin user created");
+        }
+    }
+
     private void validateRegisterRequest(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
