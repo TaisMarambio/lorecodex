@@ -1,5 +1,6 @@
 package com.lorecodex.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -58,18 +59,22 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @JsonIgnore // Evita que la contraseña se serialice en JSON
     @Column(nullable = false)
     private String password;
 
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Guide> guides;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Review> reviews;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Comment> comments;
 

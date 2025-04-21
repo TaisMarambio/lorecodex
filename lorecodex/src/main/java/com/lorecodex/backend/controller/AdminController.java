@@ -1,33 +1,38 @@
 package com.lorecodex.backend.controller;
 
-import com.lorecodex.backend.model.User;
+import com.lorecodex.backend.dto.response.UserDTO;
+import com.lorecodex.backend.mapper.UserMapper;
 import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin("*")
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdminController {
+
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @Autowired
-    public AdminController(UserService userService) {
+    public AdminController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> users = userMapper.toDTOList(userService.getAllUsers());
+        return ResponseEntity.ok(users);
     }
 
     @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

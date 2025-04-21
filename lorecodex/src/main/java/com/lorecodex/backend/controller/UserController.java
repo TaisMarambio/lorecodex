@@ -1,36 +1,32 @@
 package com.lorecodex.backend.controller;
 
+import com.lorecodex.backend.dto.response.UserDTO;
+import com.lorecodex.backend.mapper.UserMapper;
 import com.lorecodex.backend.model.User;
-import com.lorecodex.backend.repository.UserRepository;
+import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    private final UserRepository userRepository;
+
+    private final UserService userService;
+    private final UserMapper userMapper;
 
     @Autowired
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService, UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Unauthorized");
+    public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.notFound().build();
         }
-
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return ResponseEntity.ok().body(user);
+        return ResponseEntity.ok(userMapper.toDTO(user));
     }
-
 }
