@@ -36,8 +36,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     log.warn("ROLE_USER not found. Creating it automatically.");
                     return roleRepository.save(new Role(null, "ROLE_USER", null));
                 });
-
-        //create and save user
         var user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -48,7 +46,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepository.save(user);
         log.info("New user registered: {}", user.getUsername());
 
-        //generate JWT and return response
         return createJwtResponse(user);
     }
 
@@ -64,7 +61,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         log.info("User logged in: {}", user.getUsername());
 
-        return createJwtResponse(user);  //generate JWT and return response
+        return createJwtResponse(user);
     }
 
     public void createDefaultAdminIfNotExists() {
