@@ -12,4 +12,5 @@ public interface GameService {
     void deleteGame(Long id);
     Game incrementLikes(Long id);
     Game updateRating(Long id, Double newRating);
+    List<Game> findGamesByTitle(String title);
 }
