@@ -48,8 +48,10 @@ public class SecurityConfig  {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/games").permitAll()
-                        .requestMatchers("/guides/**").hasRole("USER")
+                        .requestMatchers("/api/games").permitAll()
+                        .requestMatchers("/api/games/{id}").permitAll()
+                        .requestMatchers("/api/games/{id}/like").permitAll()
+                        .requestMatchers("/api/games/{id}/rate").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

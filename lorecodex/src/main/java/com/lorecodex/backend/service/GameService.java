@@ -1,15 +1,15 @@
 package com.lorecodex.backend.service;
 
-import com.lorecodex.backend.dto.request.GameRequest;
-import com.lorecodex.backend.dto.response.GameResponse;
-
+import com.lorecodex.backend.model.Game;
 import java.util.List;
+import java.util.Optional;
 
 public interface GameService {
-    GameResponse createGame(GameRequest request);
-    GameResponse getGame(Long id);
-    List<GameResponse> getAllGames();
-    GameResponse updateGame(Long id, GameRequest request);
+    List<Game> getAllGames();
+    Optional<Game> getGameById(Long id);
+    Game createGame(Game game);
+    Game updateGame(Long id, Game game);
     void deleteGame(Long id);
-    void likeGame(Long gameId, Long userId);
+    Game incrementLikes(Long id);
+    Game updateRating(Long id, Double newRating);
 }
