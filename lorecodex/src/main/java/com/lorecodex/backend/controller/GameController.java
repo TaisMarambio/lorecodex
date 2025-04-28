@@ -12,9 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/games")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class GameController {
 
     private final GameService gameService;
@@ -28,8 +30,17 @@ public class GameController {
 
     // Endpoint público para obtener todos los juegos
     @GetMapping
-    public ResponseEntity<List<GameDTO>> getAllGames() {
-        List<Game> games = gameService.getAllGames();
+    public ResponseEntity<List<GameDTO>> getAllGames(@RequestParam(required = false) String title) {
+        List<Game> games;
+
+        if (title != null && !title.isEmpty()) {
+            // Si se proporciona un título, buscar por título
+            games = gameService.findGamesByTitle(title);
+        } else {
+            // De lo contrario, obtener todos los juegos
+            games = gameService.getAllGames();
+        }
+
         return ResponseEntity.ok(gameMapper.toDTOList(games));
     }
 

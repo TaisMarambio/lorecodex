@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -95,5 +96,10 @@ public class GameServiceImpl implements GameService {
         game.setRating(newRating);
 
         return gameRepository.save(game);
+    }
+
+    @Override
+    public List<Game> findGamesByTitle(String title) {
+        return gameRepository.findByTitleContainingIgnoreCase(title);
     }
 }
