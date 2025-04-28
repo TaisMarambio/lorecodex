@@ -9,6 +9,8 @@ import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.GuideService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,15 +24,14 @@ public class GuideServiceImpl implements GuideService {
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
-    private final CommentRepository commentRepository;
 
     @Override
     @Transactional
-    public GuideResponse createGuide(GuideRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Game game = gameRepository.findById(request.getGameId())
-                .orElseThrow(() -> new RuntimeException("Juego no encontrado"));
+    public GuideResponse createGuide(GuideRequest request, String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         Guide guide = new Guide();
         guide.setTitle(request.getTitle());
@@ -40,7 +41,6 @@ public class GuideServiceImpl implements GuideService {
         guide.setPublished(request.isPublished());
         guide.setDraft(request.isDraft());
         guide.setUser(user);
-        guide.setGame(game);
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
 
@@ -125,11 +125,8 @@ public class GuideServiceImpl implements GuideService {
         response.setTitle(guide.getTitle());
         response.setContent(guide.getContent());
         response.setCoverImageUrl(guide.getCoverImageUrl());
-        response.setIsPublished(guide.isPublished());
-        response.setIsDraft(guide.isDraft());
         response.setTags(guide.getTags());
         response.setUserId(guide.getUser().getId());
-        response.setGameId(guide.getGame().getId());
         response.setLikeCount(guide.getLikedBy() != null ? guide.getLikedBy().size() : 0);
         response.setCreatedAt(guide.getCreatedAt());
         response.setUpdatedAt(guide.getUpdatedAt());

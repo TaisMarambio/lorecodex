@@ -19,6 +19,5 @@ public class GuideRequest {
     private boolean isDraft;
     private Set<String> tags;
     private Long userId;
-    private Long gameId;
     private List<GuideImageRequest> images;
 }

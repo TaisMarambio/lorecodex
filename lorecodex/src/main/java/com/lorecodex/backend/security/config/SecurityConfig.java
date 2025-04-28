@@ -48,7 +48,8 @@ public class SecurityConfig  {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/games").permitAll()
+                        .requestMatchers("/games").permitAll()
+                        .requestMatchers("/guides/**").hasRole("USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
