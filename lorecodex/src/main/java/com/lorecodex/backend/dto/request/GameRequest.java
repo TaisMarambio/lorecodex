@@ -2,6 +2,7 @@ package com.lorecodex.backend.dto.request;
 
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -15,6 +16,6 @@ public class GameRequest {
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
-    private Set<String> genres;
-    private Set<String> awards;
+    private List<String> genres;
+    private List<String> awards;
 }
