@@ -1,11 +1,8 @@
-package com.lorecodex.backend.dto.request;
+package com.lorecodex.backend.dto.response;
 
 import lombok.*;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
@@ -13,13 +10,14 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameRequest {
+public class GameDTO {
+    private Long id;
     private String title;
-    private Double rating;
-    private String genre;
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
-    private List<String> genres;
-    private List<String> awards;
+    private Double rating;
+    private Integer likes;
+    private Set<String> genres;
+    private Set<String> awards;
 }

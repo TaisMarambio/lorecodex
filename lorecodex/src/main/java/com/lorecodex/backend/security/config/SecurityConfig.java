@@ -46,10 +46,33 @@ public class SecurityConfig  {
         http.cors(withDefaults()) // Allow CORS
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        // Frontend compatibility endpoints
+                        .requestMatchers("/games").permitAll()
+                        .requestMatchers("/games/**").permitAll()
+                        .requestMatchers("/admin/games").hasRole("ADMIN")
+                        .requestMatchers("/admin/games/**").hasRole("ADMIN")
+
+                        // Original API endpoints
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/games").permitAll()
                         .requestMatchers("/guides/**").hasRole("USER")
+                        .requestMatchers("/api/games").permitAll()
+                        .requestMatchers("/api/games/{id}").permitAll()
+                        .requestMatchers("/api/games/{id}/like").permitAll()
+
+                        // Updated rating endpoints - require authentication
+                        .requestMatchers("/api/games/{id}/rate").authenticated()
+                        .requestMatchers("/api/games/{id}/rating").authenticated()
+
+                        // Reviews endpoints
+                        .requestMatchers("/api/reviews").permitAll()
+                        .requestMatchers("/api/reviews/game/{gameId}").permitAll()
+                        .requestMatchers("/api/reviews/{id}").permitAll()
+                        .requestMatchers("/api/reviews/{id}/like").permitAll()
+                        .requestMatchers("/api/reviews/{id}/dislike").permitAll()
+                        .requestMatchers("/api/reviews/admin").hasRole("ADMIN")
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

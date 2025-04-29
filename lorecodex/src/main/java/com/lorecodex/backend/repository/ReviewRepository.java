@@ -1,0 +1,16 @@
+package com.lorecodex.backend.repository;
+
+import com.lorecodex.backend.model.Review;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+    List<Review> findByGameId(Long gameId);
+    List<Review> findByUserId(Integer userId);
+    Optional<Review> findByUserIdAndGameId(Integer userId, Long gameId);
+    void deleteByUserIdAndGameId(Integer userId, Long gameId);
+}
