@@ -15,4 +15,5 @@ public interface GameService {
     Game rateGame(Long gameId, Double rating, User user);
     Double getUserRatingForGame(Long gameId, Long userId);
     List<Game> findGamesByTitle(String title);
+    Double calculateAverageRating(Long gameId);
 }

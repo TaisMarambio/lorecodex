@@ -1,5 +1,7 @@
 package com.lorecodex.backend.repository;
 
+import com.lorecodex.backend.model.Game;
+import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -14,7 +16,8 @@ import java.util.Optional;
 public interface UserRatingRepository extends JpaRepository<UserRating, Long> {
     List<UserRating> findByGameId(Long gameId);
     Optional<UserRating> findByUserIdAndGameId(Long userId, Long gameId);
-
+    Optional<UserRating> findByUserAndGame(User user, Game game);
+    List<UserRating> findAllByGame(Game game);
     @Query("SELECT AVG(ur.rating) FROM UserRating ur WHERE ur.game.id = :gameId")
     Double calculateAverageRatingForGame(Long gameId);
 

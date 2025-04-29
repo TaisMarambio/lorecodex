@@ -133,4 +133,15 @@ public class GameController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // Endpoint público para obtener el promedio de rating de un juego
+    @GetMapping("/{id}/average-rating")
+    public ResponseEntity<Double> getAverageRating(@PathVariable Long id) {
+        Double averageRating = gameService.getGameById(id)
+                .map(game -> gameService.calculateAverageRating(game.getId()))
+                .orElse(0.0);
+
+        return ResponseEntity.ok(averageRating);
+    }
+
 }
