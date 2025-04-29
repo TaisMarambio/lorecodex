@@ -1,23 +1,28 @@
 package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.model.Game;
+import com.lorecodex.backend.model.User;
+import com.lorecodex.backend.model.UserRating;
 import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.GameService;
+import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
+    private final UserRatingService userRatingService;
 
     @Autowired
-    public GameServiceImpl(GameRepository gameRepository) {
+    public GameServiceImpl(GameRepository gameRepository, UserRatingService userRatingService) {
         this.gameRepository = gameRepository;
+        this.userRatingService = userRatingService;
     }
 
     @Override
@@ -87,15 +92,44 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game updateRating(Long id, Double newRating) {
-        Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
+    @Transactional
+    public Game rateGame(Long gameId, Double rating, User user) {
+        if (rating < 0 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 0 and 5");
+        }
 
-        // Aquí podrías implementar lógica para calcular el promedio de ratings
-        // Por ahora, simplemente actualizamos el rating
-        game.setRating(newRating);
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + gameId));
+
+        // Save or update the user's rating
+        Optional<UserRating> existingRating = userRatingService.getRatingByUserAndGame(user.getId(), gameId);
+
+        UserRating userRating;
+        if (existingRating.isPresent()) {
+            userRating = existingRating.get();
+            userRating.setRating(rating);
+        } else {
+            userRating = new UserRating();
+            userRating.setUser(user);
+            userRating.setGame(game);
+            userRating.setRating(rating);
+        }
+
+        userRatingService.saveOrUpdateRating(userRating);
+
+        // Calculate the new average rating for this game
+        Double averageRating = userRatingService.calculateAverageRating(gameId);
+
+        // Update the game's rating with the new average
+        game.setRating(averageRating);
 
         return gameRepository.save(game);
+    }
+
+    @Override
+    public Double getUserRatingForGame(Long gameId, Integer userId) {
+        Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
+        return userRating.map(UserRating::getRating).orElse(null);
     }
 
     @Override

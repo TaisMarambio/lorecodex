@@ -58,7 +58,10 @@ public class SecurityConfig  {
                         .requestMatchers("/api/games").permitAll()
                         .requestMatchers("/api/games/{id}").permitAll()
                         .requestMatchers("/api/games/{id}/like").permitAll()
-                        .requestMatchers("/api/games/{id}/rate").permitAll()
+
+                        // Updated rating endpoints - require authentication
+                        .requestMatchers("/api/games/{id}/rate").authenticated()
+                        .requestMatchers("/api/games/{id}/rating").authenticated()
 
                         // Reviews endpoints
                         .requestMatchers("/api/reviews").permitAll()
