@@ -31,11 +31,13 @@ public class UserRatingServiceImpl implements UserRatingService {
     }
 
     @Override
+    @Transactional
     public UserRating saveOrUpdateRating(UserRating userRating) {
         return userRatingRepository.save(userRating);
     }
 
     @Override
+    @Transactional
     public void deleteRating(Long id) {
         userRatingRepository.deleteById(id);
     }
@@ -48,16 +50,41 @@ public class UserRatingServiceImpl implements UserRatingService {
 
     @Override
     public Double calculateAverageRating(Long gameId) {
-        List<UserRating> ratings = userRatingRepository.findByGameId(gameId);
+        try {
+            // First attempt to use the repository query method
+            Double average = userRatingRepository.calculateAverageRatingForGame(gameId);
 
-        if (ratings.isEmpty()) {
-            return 0.0;
+            // If the query returned null (no ratings), return 0.0
+            if (average == null) {
+                return 0.0;
+            }
+
+            // Round to 1 decimal place for better presentation
+            return Math.round(average * 10.0) / 10.0;
+        } catch (Exception e) {
+            // Fallback calculation method if the query fails
+            List<UserRating> ratings = userRatingRepository.findByGameId(gameId);
+
+            if (ratings == null || ratings.isEmpty()) {
+                return 0.0;
+            }
+
+            double sum = 0.0;
+            int count = 0;
+
+            for (UserRating rating : ratings) {
+                if (rating.getRating() != null) {
+                    sum += rating.getRating();
+                    count++;
+                }
+            }
+
+            if (count == 0) {
+                return 0.0;
+            }
+
+            // Round to 1 decimal place
+            return Math.round((sum / count) * 10.0) / 10.0;
         }
-
-        double sum = ratings.stream()
-                .mapToDouble(UserRating::getRating)
-                .sum();
-
-        return sum / ratings.size();
     }
 }
