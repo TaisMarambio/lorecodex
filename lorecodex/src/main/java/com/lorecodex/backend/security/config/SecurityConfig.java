@@ -59,6 +59,15 @@ public class SecurityConfig  {
                         .requestMatchers("/api/games/{id}").permitAll()
                         .requestMatchers("/api/games/{id}/like").permitAll()
                         .requestMatchers("/api/games/{id}/rate").permitAll()
+
+                        // Reviews endpoints
+                        .requestMatchers("/api/reviews").permitAll()
+                        .requestMatchers("/api/reviews/game/{gameId}").permitAll()
+                        .requestMatchers("/api/reviews/{id}").permitAll()
+                        .requestMatchers("/api/reviews/{id}/like").permitAll()
+                        .requestMatchers("/api/reviews/{id}/dislike").permitAll()
+                        .requestMatchers("/api/reviews/admin").hasRole("ADMIN")
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
