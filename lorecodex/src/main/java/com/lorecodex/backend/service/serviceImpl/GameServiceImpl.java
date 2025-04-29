@@ -94,42 +94,34 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public Game rateGame(Long gameId, Double rating, User user) {
-        // Validate the rating
-        if (rating < 0 || rating > 5) {
-            throw new IllegalArgumentException("Rating must be between 0 and 5");
-        }
-
-        // Find the game or throw exception
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + gameId));
+                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        try {
-            // Save or update the user's rating
-            Optional<UserRating> existingRating = userRatingService.getRatingByUserAndGame(user.getId(), gameId);
+        // Buscar si ya existe rating previo de ese usuario para ese juego
+        UserRating userRating = userRatingService.findByUserAndGame(user, game);
 
-            UserRating userRating;
-            if (existingRating.isPresent()) {
-                userRating = existingRating.get();
-                userRating.setRating(rating);
-            } else {
-                userRating = new UserRating();
-                userRating.setUser(user);
-                userRating.setGame(game);
-                userRating.setRating(rating);
-            }
-
-            userRatingService.saveOrUpdateRating(userRating);
-
-            // Calculate the new average rating for this game
-            Double averageRating = userRatingService.calculateAverageRating(gameId);
-
-            // Update the game's rating with the new average
-            game.setRating(averageRating);
-
-            return gameRepository.save(game);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error saving rating: " + e.getMessage());
+        if (userRating == null) {
+            // Si no existe, crear nuevo
+            userRating = new UserRating();
+            userRating.setUser(user);
+            userRating.setGame(game);
         }
+
+        // Actualizar o setear el rating
+        userRating.setRating(rating);
+        userRatingService.save(userRating);
+
+        // Ahora recalculamos el promedio general
+        List<UserRating> allRatings = userRatingService.findAllByGame(game);
+        double averageRating = allRatings.stream()
+                .mapToDouble(UserRating::getRating)
+                .average()
+                .orElse(0.0);
+
+        game.setRating(averageRating);
+        gameRepository.save(game);
+
+        return game;
     }
 
     @Override
@@ -146,5 +138,10 @@ public class GameServiceImpl implements GameService {
     @Override
     public List<Game> findGamesByTitle(String title) {
         return gameRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    @Override
+    public Double calculateAverageRating(Long gameId) {
+        return userRatingService.calculateAverageRating(gameId);
     }
 }

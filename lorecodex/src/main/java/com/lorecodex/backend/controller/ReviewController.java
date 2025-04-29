@@ -53,7 +53,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
 
-    // Obtener una review específica (público)
+    // Obtener una review específica (publico)
     @GetMapping("/{id}")
     public ResponseEntity<ReviewDTO> getReviewById(@PathVariable Long id) {
         return reviewService.getReviewById(id)
@@ -61,7 +61,7 @@ public class ReviewController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Crear una review (requiere autenticación)
+    //crear una review (requiere autenticación)
     @PostMapping
     public ResponseEntity<?> createReview(@RequestBody ReviewRequest reviewRequest,
                                           @AuthenticationPrincipal User user) {

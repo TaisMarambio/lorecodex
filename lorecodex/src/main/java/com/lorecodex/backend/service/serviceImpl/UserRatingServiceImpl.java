@@ -1,5 +1,7 @@
 package com.lorecodex.backend.service.serviceImpl;
 
+import com.lorecodex.backend.model.Game;
+import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
 import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.UserRatingService;
@@ -86,5 +88,26 @@ public class UserRatingServiceImpl implements UserRatingService {
             // Round to 1 decimal place
             return Math.round((sum / count) * 10.0) / 10.0;
         }
+    }
+
+    @Override
+    public Double calculateUserRating(Long userId, Long gameId) {
+        return 0.0;
+    }
+
+    @Override
+    public UserRating findByUserAndGame(User user, Game game) {
+        return userRatingRepository.findByUserAndGame(user, game)
+                .orElse(null);
+    }
+
+    @Override
+    public void save(UserRating userRating) {
+        userRatingRepository.save(userRating);
+    }
+
+    @Override
+    public List<UserRating> findAllByGame(Game game) {
+        return List.of();
     }
 }

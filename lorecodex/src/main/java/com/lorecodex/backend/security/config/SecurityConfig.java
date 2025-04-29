@@ -8,6 +8,7 @@ import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -58,6 +59,7 @@ public class SecurityConfig  {
                         .requestMatchers("/api/games").permitAll()
                         .requestMatchers("/api/games/{id}").permitAll()
                         .requestMatchers("/api/games/{id}/like").permitAll()
+                        .requestMatchers("/api/games/**").authenticated()
 
                         // Updated rating endpoints - require authentication
                         .requestMatchers("/api/games/{id}/rate").authenticated()
