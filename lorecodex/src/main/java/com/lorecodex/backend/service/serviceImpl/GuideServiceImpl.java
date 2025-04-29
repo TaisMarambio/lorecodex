@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +28,7 @@ public class GuideServiceImpl implements GuideService {
 
     @Override
     @Transactional
-    public GuideResponse createGuide(GuideRequest request, String username) {
+    public GuideResponse createGuide(GuideRequest request, String username, List<MultipartFile> images) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         username = authentication.getName();
         User user = userRepository.findByUsername(username)
@@ -44,16 +45,22 @@ public class GuideServiceImpl implements GuideService {
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
 
+        // Si después queremos procesar las imágenes subidas, acá podríamos guardarlas
         if (request.getImages() != null) {
-            List<GuideImage> images = request.getImages().stream().map(imgReq -> {
+            List<GuideImage> imagesFromRequest = request.getImages().stream().map(imgReq -> {
                 GuideImage image = new GuideImage();
                 image.setImageUrl(imgReq.getImageUrl());
                 image.setCaption(imgReq.getCaption());
                 image.setGuide(guide);
                 return image;
             }).collect(Collectors.toList());
-            guide.setImages(images);
+            guide.setImages(imagesFromRequest);
         }
+
+        // (Opcional) Procesar imágenes subidas desde MultipartFile
+        // if (images != null && !images.isEmpty()) {
+        // TODO: procesar imágenes subidas reales
+        // }
 
         Guide saved = guideRepository.save(guide);
         return mapToResponse(saved);
@@ -118,6 +125,42 @@ public class GuideServiceImpl implements GuideService {
         guideRepository.save(guide);
     }
 
+    @Override
+    public List<GuideResponse> getDraftsByUserId(Long userId) {
+        List<Guide> drafts = guideRepository.findByUserIdAndIsDraftTrue(userId);
+        return drafts.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public List<GuideResponse> getPublishedGuidesByUserId(Long id) {
+        return List.of();
+    }
+
+    @Override
+    public List<GuideResponse> getDraftsByUserIdAndPublished(Long id, boolean published) {
+        return List.of();
+    }
+
+    @Override
+    public List<GuideResponse> getPublishedGuidesByUserIdAndDraft(Long id, boolean draft) {
+        return List.of();
+    }
+
+    @Override
+    public List<GuideResponse> getDraftsByUserIdAndPublishedAndDraft(Long id, boolean published, boolean draft) {
+        return List.of();
+    }
+
+    @Override
+    public List<GuideResponse> getPublishedGuides() {
+        return guideRepository.findByIsPublishedTrue().stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+
     //Mapper interno
     private GuideResponse mapToResponse(Guide guide) {
         GuideResponse response = new GuideResponse();
@@ -147,7 +190,7 @@ public class GuideServiceImpl implements GuideService {
                 res.setId(comment.getId());
                 res.setText(comment.getContent());
                 res.setUserId(comment.getUser().getId());
-                res.setUsername(comment.getUser().getUsername()); // asumiendo que hay un campo username
+                res.setUsername(comment.getUser().getUsername());
                 res.setCreatedAt(comment.getCreatedAt());
                 return res;
             }).collect(Collectors.toList());

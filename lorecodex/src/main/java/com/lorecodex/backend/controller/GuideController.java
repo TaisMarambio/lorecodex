@@ -4,13 +4,15 @@ import com.lorecodex.backend.dto.request.GuideRequest;
 import com.lorecodex.backend.dto.response.GuideResponse;
 import com.lorecodex.backend.service.GuideService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/guides")
@@ -19,12 +21,29 @@ public class GuideController {
 
     private final GuideService guideService;
 
-    @PostMapping("/create")
-    public ResponseEntity<GuideResponse> createGuide(@RequestBody GuideRequest request) {
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GuideResponse> createGuide(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "coverImageUrl", required = false) String coverImageUrl,
+            @RequestParam("isPublished") boolean isPublished,
+            @RequestParam("isDraft") boolean isDraft,
+            @RequestParam(value = "tags", required = false) Set<String> tags,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        GuideResponse response = guideService.createGuide(request, username);
+        GuideRequest guideRequest = GuideRequest.builder()
+                .title(title)
+                .content(content)
+                .coverImageUrl(coverImageUrl)
+                .isPublished(isPublished)
+                .isDraft(isDraft)
+                .tags(tags)
+                .build();
+
+        GuideResponse response = guideService.createGuide(guideRequest, username, images);
         return ResponseEntity.ok(response);
     }
 
@@ -40,9 +59,30 @@ public class GuideController {
         return ResponseEntity.ok(guideService.getAllGuides());
     }
 
+    @GetMapping("/published")
+    public ResponseEntity<List<GuideResponse>> getPublishedGuides() {
+        return ResponseEntity.ok(guideService.getPublishedGuides());
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<GuideResponse> updateGuide(@PathVariable Long id, @RequestBody GuideRequest request) {
-        return ResponseEntity.ok(guideService.updateGuide(id, request));
+    public ResponseEntity<GuideResponse> updateGuide(
+            @PathVariable Long id,
+            @RequestPart("title") String title,
+            @RequestPart("content") String content,
+            @RequestPart("isDraft") String isDraftStr,
+            @RequestPart("isPublished") String isPublishedStr,
+            @RequestPart(value = "coverImage", required = false) MultipartFile coverImage
+    ) {
+        GuideRequest request = new GuideRequest();
+        request.setTitle(title);
+        request.setContent(content);
+        request.setDraft(Boolean.parseBoolean(isDraftStr));
+        request.setPublished(Boolean.parseBoolean(isPublishedStr));
+
+        // para q despúes manejemos coverImage, se maneja acá.
+
+        GuideResponse updated = guideService.updateGuide(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/deleteGuide/{id}")
