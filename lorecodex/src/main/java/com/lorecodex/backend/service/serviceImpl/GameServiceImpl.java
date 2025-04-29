@@ -37,7 +37,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game createGame(Game game) {
-        // Inicializar valores por defecto si no están presentes
+        // Initialize default values if not present
         if (game.getRating() == null) {
             game.setRating(0.0);
         }
@@ -52,7 +52,7 @@ public class GameServiceImpl implements GameService {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
 
-        // Actualizar solo si los valores no son nulos
+        // Update only if values are not null
         if (gameDetails.getTitle() != null) {
             game.setTitle(gameDetails.getTitle());
         }
@@ -94,42 +94,53 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public Game rateGame(Long gameId, Double rating, User user) {
+        // Validate the rating
         if (rating < 0 || rating > 5) {
             throw new IllegalArgumentException("Rating must be between 0 and 5");
         }
 
+        // Find the game or throw exception
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + gameId));
 
-        // Save or update the user's rating
-        Optional<UserRating> existingRating = userRatingService.getRatingByUserAndGame(user.getId(), gameId);
+        try {
+            // Save or update the user's rating
+            Optional<UserRating> existingRating = userRatingService.getRatingByUserAndGame(user.getId(), gameId);
 
-        UserRating userRating;
-        if (existingRating.isPresent()) {
-            userRating = existingRating.get();
-            userRating.setRating(rating);
-        } else {
-            userRating = new UserRating();
-            userRating.setUser(user);
-            userRating.setGame(game);
-            userRating.setRating(rating);
+            UserRating userRating;
+            if (existingRating.isPresent()) {
+                userRating = existingRating.get();
+                userRating.setRating(rating);
+            } else {
+                userRating = new UserRating();
+                userRating.setUser(user);
+                userRating.setGame(game);
+                userRating.setRating(rating);
+            }
+
+            userRatingService.saveOrUpdateRating(userRating);
+
+            // Calculate the new average rating for this game
+            Double averageRating = userRatingService.calculateAverageRating(gameId);
+
+            // Update the game's rating with the new average
+            game.setRating(averageRating);
+
+            return gameRepository.save(game);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error saving rating: " + e.getMessage());
         }
-
-        userRatingService.saveOrUpdateRating(userRating);
-
-        // Calculate the new average rating for this game
-        Double averageRating = userRatingService.calculateAverageRating(gameId);
-
-        // Update the game's rating with the new average
-        game.setRating(averageRating);
-
-        return gameRepository.save(game);
     }
 
     @Override
     public Double getUserRatingForGame(Long gameId, Integer userId) {
-        Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
-        return userRating.map(UserRating::getRating).orElse(null);
+        try {
+            Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
+            return userRating.map(UserRating::getRating).orElse(null);
+        } catch (Exception e) {
+            // Log the error if needed
+            return null;
+        }
     }
 
     @Override
