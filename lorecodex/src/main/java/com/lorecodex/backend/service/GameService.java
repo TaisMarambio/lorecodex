@@ -13,6 +13,6 @@ public interface GameService {
     void deleteGame(Long id);
     Game incrementLikes(Long id);
     Game rateGame(Long gameId, Double rating, User user);
-    Double getUserRatingForGame(Long gameId, Integer userId);
+    Double getUserRatingForGame(Long gameId, Long userId);
     List<Game> findGamesByTitle(String title);
 }

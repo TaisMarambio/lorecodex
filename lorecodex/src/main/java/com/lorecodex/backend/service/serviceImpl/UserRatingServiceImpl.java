@@ -26,7 +26,7 @@ public class UserRatingServiceImpl implements UserRatingService {
     }
 
     @Override
-    public Optional<UserRating> getRatingByUserAndGame(Integer userId, Long gameId) {
+    public Optional<UserRating> getRatingByUserAndGame(Long userId, Long gameId) {
         return userRatingRepository.findByUserIdAndGameId(userId, gameId);
     }
 
@@ -44,7 +44,7 @@ public class UserRatingServiceImpl implements UserRatingService {
 
     @Override
     @Transactional
-    public void deleteRatingByUserAndGame(Integer userId, Long gameId) {
+    public void deleteRatingByUserAndGame(Long userId, Long gameId) {
         userRatingRepository.deleteByUserIdAndGameId(userId, gameId);
     }
 

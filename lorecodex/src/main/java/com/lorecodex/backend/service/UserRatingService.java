@@ -6,9 +6,9 @@ import java.util.Optional;
 
 public interface UserRatingService {
     List<UserRating> getAllRatingsByGameId(Long gameId);
-    Optional<UserRating> getRatingByUserAndGame(Integer userId, Long gameId);
+    Optional<UserRating> getRatingByUserAndGame(Long userId, Long gameId);
     UserRating saveOrUpdateRating(UserRating userRating);
     void deleteRating(Long id);
-    void deleteRatingByUserAndGame(Integer userId, Long gameId);
+    void deleteRatingByUserAndGame(Long userId, Long gameId);
     Double calculateAverageRating(Long gameId);
 }

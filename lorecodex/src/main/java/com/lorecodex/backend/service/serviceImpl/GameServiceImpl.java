@@ -133,7 +133,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Double getUserRatingForGame(Long gameId, Integer userId) {
+    public Double getUserRatingForGame(Long gameId, Long userId) {
         try {
             Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
             return userRating.map(UserRating::getRating).orElse(null);

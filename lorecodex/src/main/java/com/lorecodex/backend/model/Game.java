@@ -19,6 +19,7 @@ public class Game {
 
     private String title;
     private String description;
+    @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
     private LocalDate releaseDate;
     private Double rating;

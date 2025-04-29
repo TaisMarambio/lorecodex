@@ -17,4 +17,5 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByTitleContainingIgnoreCase(@Param("title") String title);
 
     List<Game> findByGenresContaining(String genre);
+    //falta agregar otras busquedas
 }
