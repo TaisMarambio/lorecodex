@@ -46,6 +46,13 @@ public class SecurityConfig  {
         http.cors(withDefaults()) // Allow CORS
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        // Frontend compatibility endpoints
+                        .requestMatchers("/games").permitAll()
+                        .requestMatchers("/games/**").permitAll()
+                        .requestMatchers("/admin/games").hasRole("ADMIN")
+                        .requestMatchers("/admin/games/**").hasRole("ADMIN")
+
+                        // Original API endpoints
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/games").permitAll()
