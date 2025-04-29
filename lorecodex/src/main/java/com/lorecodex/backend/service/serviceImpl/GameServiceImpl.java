@@ -1,7 +1,5 @@
 package com.lorecodex.backend.service.serviceImpl;
 
-import com.lorecodex.backend.dto.request.GameRequest;
-import com.lorecodex.backend.dto.response.GameResponse;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
@@ -18,14 +16,6 @@ import java.util.Optional;
 @Service
 public class GameServiceImpl implements GameService {
 
-    public GameResponse mapToGameResponse(Game game) {
-        return GameResponse.builder()
-                .id(game.getId())
-                .title(game.getTitle())
-                .rating(game.getRating())
-                .genre(game.getGenre())
-                .description(game.getDescription())
-                .build();
     private final GameRepository gameRepository;
     private final UserRatingService userRatingService;
 
@@ -36,22 +26,16 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public GameResponse createGame(GameRequest request) {
-        return null;
     public List<Game> getAllGames() {
         return gameRepository.findAll();
     }
 
     @Override
-    public GameResponse getGame(Long id) {
-        return null;
     public Optional<Game> getGameById(Long id) {
         return gameRepository.findById(id);
     }
 
     @Override
-    public List<GameResponse> getAllGames() {
-        return List.of();
     public Game createGame(Game game) {
         // Initialize default values if not present
         if (game.getRating() == null) {
@@ -64,8 +48,6 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public GameResponse updateGame(Long id, GameRequest request) {
-        return null;
     public Game updateGame(Long id, Game gameDetails) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
@@ -95,7 +77,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void deleteGame(Long id) {
-
         gameRepository.deleteById(id);
     }
 
@@ -111,7 +92,6 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void likeGame(Long gameId, Long userId) {
     @Transactional
     public Game rateGame(Long gameId, Double rating, User user) {
         // Validate the rating
@@ -153,7 +133,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Double getUserRatingForGame(Long gameId, Integer userId) {
+    public Double getUserRatingForGame(Long gameId, Long userId) {
         try {
             Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
             return userRating.map(UserRating::getRating).orElse(null);

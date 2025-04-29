@@ -32,7 +32,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<Review> getReviewsByUserId(Integer userId) {
+    public List<Review> getReviewsByUserId(Long userId) {
         return reviewRepository.findByUserId(userId);
     }
 
@@ -42,7 +42,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Optional<Review> getReviewByUserAndGame(Integer userId, Long gameId) {
+    public Optional<Review> getReviewByUserAndGame(Long userId, Long gameId) {
         return reviewRepository.findByUserIdAndGameId(userId, gameId);
     }
 

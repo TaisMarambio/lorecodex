@@ -9,9 +9,9 @@ import java.util.Optional;
 public interface ReviewService {
     List<Review> getAllReviews();
     List<Review> getReviewsByGameId(Long gameId);
-    List<Review> getReviewsByUserId(Integer userId);
+    List<Review> getReviewsByUserId(Long userId);
     Optional<Review> getReviewById(Long id);
-    Optional<Review> getReviewByUserAndGame(Integer userId, Long gameId);
+    Optional<Review> getReviewByUserAndGame(Long userId, Long gameId);
     Review createReview(Review review);
     Review updateReview(Long id, Review review);
     void deleteReview(Long id);

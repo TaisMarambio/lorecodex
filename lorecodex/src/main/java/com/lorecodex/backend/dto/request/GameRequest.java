@@ -20,6 +20,6 @@ public class GameRequest {
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
-    private List<String> genres;
-    private List<String> awards;
+    private Set<String> genres;
+    private Set<String> awards;
 }
