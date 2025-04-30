@@ -1,14 +1,10 @@
 package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.model.Game;
-import com.lorecodex.backend.model.User;
-import com.lorecodex.backend.model.UserRating;
 import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.GameService;
-import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,12 +13,10 @@ import java.util.Optional;
 public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
-    private final UserRatingService userRatingService;
 
     @Autowired
-    public GameServiceImpl(GameRepository gameRepository, UserRatingService userRatingService) {
+    public GameServiceImpl(GameRepository gameRepository) {
         this.gameRepository = gameRepository;
-        this.userRatingService = userRatingService;
     }
 
     @Override
@@ -83,5 +77,13 @@ public class GameServiceImpl implements GameService {
     @Override
     public List<Game> findGamesByTitle(String title) {
         return gameRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    @Override
+    public Game incrementLikes(Long id) {
+        Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
+        game.setLikes(game.getLikes() + 1);
+        return gameRepository.save(game);
     }
 }

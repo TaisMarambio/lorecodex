@@ -6,7 +6,6 @@ import com.lorecodex.backend.model.Game;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -50,8 +49,8 @@ public class GameMapper {
         game.setDescription(gameRequest.getDescription());
         game.setCoverImage(gameRequest.getCoverImage());
         game.setReleaseDate(gameRequest.getReleaseDate());
-        game.setGenres((Set<String>) gameRequest.getGenres());
-        game.setAwards((Set<String>) gameRequest.getAwards());
+        game.setGenres(gameRequest.getGenres());
+        game.setAwards(gameRequest.getAwards());
         game.setRating(0.0);
         game.setLikes(0);
 
@@ -72,10 +71,10 @@ public class GameMapper {
             game.setReleaseDate(gameRequest.getReleaseDate());
         }
         if (gameRequest.getGenres() != null) {
-            game.setGenres((Set<String>) gameRequest.getGenres());
+            game.setGenres(gameRequest.getGenres());
         }
         if (gameRequest.getAwards() != null) {
-            game.setAwards((Set<String>) gameRequest.getAwards());
+            game.setAwards(gameRequest.getAwards());
         }
     }
 }

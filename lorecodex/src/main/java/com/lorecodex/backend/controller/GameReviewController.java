@@ -3,7 +3,6 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ReviewRequest;
 import com.lorecodex.backend.dto.response.ReviewDTO;
 import com.lorecodex.backend.mapper.ReviewMapper;
-import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.Review;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.ReviewService;
