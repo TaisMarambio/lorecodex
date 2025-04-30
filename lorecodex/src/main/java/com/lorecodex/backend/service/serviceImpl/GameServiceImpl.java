@@ -81,67 +81,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game incrementLikes(Long id) {
-        Game game = gameRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
-
-        int currentLikes = game.getLikes() != null ? game.getLikes() : 0;
-        game.setLikes(currentLikes + 1);
-
-        return gameRepository.save(game);
-    }
-
-    @Override
-    @Transactional
-    public Game rateGame(Long gameId, Double rating, User user) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
-
-        // Buscar si ya existe rating previo de ese usuario para ese juego
-        UserRating userRating = userRatingService.findByUserAndGame(user, game);
-
-        if (userRating == null) {
-            // Si no existe, crear nuevo
-            userRating = new UserRating();
-            userRating.setUser(user);
-            userRating.setGame(game);
-        }
-
-        // Actualizar o setear el rating
-        userRating.setRating(rating);
-        userRatingService.save(userRating);
-
-        // Ahora recalculamos el promedio general
-        List<UserRating> allRatings = userRatingService.findAllByGame(game);
-        double averageRating = allRatings.stream()
-                .mapToDouble(UserRating::getRating)
-                .average()
-                .orElse(0.0);
-
-        game.setRating(averageRating);
-        gameRepository.save(game);
-
-        return game;
-    }
-
-    @Override
-    public Double getUserRatingForGame(Long gameId, Long userId) {
-        try {
-            Optional<UserRating> userRating = userRatingService.getRatingByUserAndGame(userId, gameId);
-            return userRating.map(UserRating::getRating).orElse(null);
-        } catch (Exception e) {
-            // Log the error if needed
-            return null;
-        }
-    }
-
-    @Override
     public List<Game> findGamesByTitle(String title) {
         return gameRepository.findByTitleContainingIgnoreCase(title);
-    }
-
-    @Override
-    public Double calculateAverageRating(Long gameId) {
-        return userRatingService.calculateAverageRating(gameId);
     }
 }

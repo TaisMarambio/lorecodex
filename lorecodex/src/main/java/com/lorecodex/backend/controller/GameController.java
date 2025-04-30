@@ -1,22 +1,17 @@
 package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.GameRequest;
-import com.lorecodex.backend.dto.request.RatingRequest;
 import com.lorecodex.backend.dto.response.GameDTO;
-import com.lorecodex.backend.dto.response.UserRatingDTO;
 import com.lorecodex.backend.mapper.GameMapper;
 import com.lorecodex.backend.model.Game;
-import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/games")
@@ -97,49 +92,4 @@ public class GameController {
         Game likedGame = gameService.incrementLikes(id);
         return ResponseEntity.ok(gameMapper.toDTO(likedGame));
     }
-
-    // Endpoint para obtener el rating del usuario para un juego específico
-    @GetMapping("/{id}/rating")
-    public ResponseEntity<?> getUserRating(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Double userRating = gameService.getUserRatingForGame(id, user.getId());
-        return ResponseEntity.ok(new UserRatingDTO(id, Objects.requireNonNullElse(userRating, 0.0)));
-
-    }
-
-    // Endpoint para actualizar el rating de un juego (requiere autenticación)
-    @PostMapping("/{id}/rate")
-    public ResponseEntity<?> rateGame(@PathVariable Long id,
-                                      @RequestBody RatingRequest ratingRequest,
-                                      @AuthenticationPrincipal User user) {
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Double rating = ratingRequest.getRating();
-        if (rating == null || rating < 0 || rating > 5) {
-            return ResponseEntity.badRequest().body("Rating must be between 0 and 5");
-        }
-
-        try {
-            Game ratedGame = gameService.rateGame(id, rating, user);
-            return ResponseEntity.ok(gameMapper.toDTO(ratedGame));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    // Endpoint público para obtener el promedio de rating de un juego
-    @GetMapping("/{id}/average-rating")
-    public ResponseEntity<Double> getAverageRating(@PathVariable Long id) {
-        Double averageRating = gameService.getGameById(id)
-                .map(game -> gameService.calculateAverageRating(game.getId()))
-                .orElse(0.0);
-
-        return ResponseEntity.ok(averageRating);
-    }
-
 }

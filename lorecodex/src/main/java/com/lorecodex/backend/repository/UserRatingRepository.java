@@ -14,14 +14,8 @@ import java.util.Optional;
 
 @Repository
 public interface UserRatingRepository extends JpaRepository<UserRating, Long> {
-    List<UserRating> findByGameId(Long gameId);
-    Optional<UserRating> findByUserIdAndGameId(Long userId, Long gameId);
     Optional<UserRating> findByUserAndGame(User user, Game game);
-    List<UserRating> findAllByGame(Game game);
-    @Query("SELECT AVG(ur.rating) FROM UserRating ur WHERE ur.game.id = :gameId")
-    Double calculateAverageRatingForGame(Long gameId);
-
-    @Modifying
-    @Query("DELETE FROM UserRating ur WHERE ur.user.id = :userId AND ur.game.id = :gameId")
-    void deleteByUserIdAndGameId(@Param("userId") Long userId, @Param("gameId") Long gameId);
+    List<UserRating> findByGame(Game game);
+    List<UserRating> findByUser(User user);
+    void deleteByUserAndGame(User user, Game game);
 }

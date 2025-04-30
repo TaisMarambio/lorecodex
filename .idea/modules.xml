@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/lorecodex.iml" filepath="$PROJECT_DIR$/.idea/lorecodex.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lorecodex.lorecodex.main.iml" filepath="$PROJECT_DIR$/.idea/modules/lorecodex.lorecodex.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lorecodex.main.iml" filepath="$PROJECT_DIR$/.idea/modules/lorecodex.main.iml" />
     </modules>
   </component>
 </project>

@@ -57,22 +57,19 @@ public class SecurityConfig  {
                         .requestMatchers("/guides/{id}").permitAll()
                         .requestMatchers("/guides/**").hasRole("USER")
                         .requestMatchers("/api/games").permitAll()
-                        .requestMatchers("api/games/allGames").permitAll()
+                        .requestMatchers("/api/games/allGames").permitAll()
                         .requestMatchers("/api/games/{id}").permitAll()
                         .requestMatchers("/api/games/{id}/like").permitAll()
-                        .requestMatchers("/api/games/**").authenticated()
 
                         // Updated rating endpoints - require authentication
-                        .requestMatchers("/api/games/{id}/rate").authenticated()
-                        .requestMatchers("/api/games/{id}/rating").authenticated()
+                        .requestMatchers("/api/games/rating/**").permitAll()
+                        //non-required authentication
+                        .requestMatchers("/api/games/{id}/average-rating").permitAll()
 
                         // Reviews endpoints
-                        .requestMatchers("/api/reviews").permitAll()
-                        .requestMatchers("/api/reviews/game/{gameId}").permitAll()
-                        .requestMatchers("/api/reviews/{id}").permitAll()
-                        .requestMatchers("/api/reviews/{id}/like").permitAll()
-                        .requestMatchers("/api/reviews/{id}/dislike").permitAll()
-                        .requestMatchers("/api/reviews/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/games/reviews/**").permitAll()
+                        .requestMatchers("/api/games/reviews/game/**").permitAll()
+
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )

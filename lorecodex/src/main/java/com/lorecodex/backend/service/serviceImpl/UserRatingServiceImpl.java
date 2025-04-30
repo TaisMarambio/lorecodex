@@ -1,5 +1,4 @@
 package com.lorecodex.backend.service.serviceImpl;
-
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
@@ -7,7 +6,6 @@ import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,91 +21,37 @@ public class UserRatingServiceImpl implements UserRatingService {
     }
 
     @Override
-    public List<UserRating> getAllRatingsByGameId(Long gameId) {
-        return userRatingRepository.findByGameId(gameId);
+    public Optional<UserRating> getUserRating(User user, Game game) {
+        return userRatingRepository.findByUserAndGame(user, game);
     }
 
     @Override
-    public Optional<UserRating> getRatingByUserAndGame(Long userId, Long gameId) {
-        return userRatingRepository.findByUserIdAndGameId(userId, gameId);
+    public List<UserRating> getRatingsByUser(User user) {
+        return userRatingRepository.findByUser(user);
     }
 
     @Override
-    @Transactional
-    public UserRating saveOrUpdateRating(UserRating userRating) {
+    public List<UserRating> getRatingsByGame(Game game) {
+        return userRatingRepository.findByGame(game);
+    }
+
+    @Override
+    public UserRating saveRating(UserRating userRating) {
         return userRatingRepository.save(userRating);
     }
 
     @Override
-    @Transactional
-    public void deleteRating(Long id) {
-        userRatingRepository.deleteById(id);
+    public UserRating rateOrUpdateRating(User user, Game game, Double rating) {
+        Optional<UserRating> existing = getUserRating(user, game);
+        UserRating r = existing.orElseGet(UserRating::new);
+        r.setUser(user);
+        r.setGame(game);
+        r.setRating(rating);
+        return saveRating(r);
     }
 
     @Override
-    @Transactional
-    public void deleteRatingByUserAndGame(Long userId, Long gameId) {
-        userRatingRepository.deleteByUserIdAndGameId(userId, gameId);
-    }
-
-    @Override
-    public Double calculateAverageRating(Long gameId) {
-        try {
-            // First attempt to use the repository query method
-            Double average = userRatingRepository.calculateAverageRatingForGame(gameId);
-
-            // If the query returned null (no ratings), return 0.0
-            if (average == null) {
-                return 0.0;
-            }
-
-            // Round to 1 decimal place for better presentation
-            return Math.round(average * 10.0) / 10.0;
-        } catch (Exception e) {
-            // Fallback calculation method if the query fails
-            List<UserRating> ratings = userRatingRepository.findByGameId(gameId);
-
-            if (ratings == null || ratings.isEmpty()) {
-                return 0.0;
-            }
-
-            double sum = 0.0;
-            int count = 0;
-
-            for (UserRating rating : ratings) {
-                if (rating.getRating() != null) {
-                    sum += rating.getRating();
-                    count++;
-                }
-            }
-
-            if (count == 0) {
-                return 0.0;
-            }
-
-            // Round to 1 decimal place
-            return Math.round((sum / count) * 10.0) / 10.0;
-        }
-    }
-
-    @Override
-    public Double calculateUserRating(Long userId, Long gameId) {
-        return 0.0;
-    }
-
-    @Override
-    public UserRating findByUserAndGame(User user, Game game) {
-        return userRatingRepository.findByUserAndGame(user, game)
-                .orElse(null);
-    }
-
-    @Override
-    public void save(UserRating userRating) {
-        userRatingRepository.save(userRating);
-    }
-
-    @Override
-    public List<UserRating> findAllByGame(Game game) {
-        return List.of();
+    public void deleteRating(User user, Game game) {
+        userRatingRepository.deleteByUserAndGame(user, game);
     }
 }

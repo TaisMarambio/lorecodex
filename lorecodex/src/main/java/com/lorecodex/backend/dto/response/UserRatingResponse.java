@@ -8,7 +8,9 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRatingDTO {
+public class UserRatingResponse {
+    private Long id;
+    private Long userId;
     private Long gameId;
     private Double rating;
 }

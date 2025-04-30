@@ -11,11 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
-    Optional<Game> findByTitle(String title);
-
     @Query("SELECT g FROM Game g WHERE LOWER(g.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     List<Game> findByTitleContainingIgnoreCase(@Param("title") String title);
-
-    List<Game> findByGenresContaining(String genre);
     //falta agregar otras busquedas
 }

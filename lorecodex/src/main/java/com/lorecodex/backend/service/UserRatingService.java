@@ -7,14 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRatingService {
-    List<UserRating> getAllRatingsByGameId(Long gameId);
-    Optional<UserRating> getRatingByUserAndGame(Long userId, Long gameId);
-    UserRating saveOrUpdateRating(UserRating userRating);
-    void deleteRating(Long id);
-    void deleteRatingByUserAndGame(Long userId, Long gameId);
-    Double calculateAverageRating(Long gameId);
-    Double calculateUserRating(Long userId, Long gameId);
-    UserRating findByUserAndGame(User user, Game game);
-    void save(UserRating userRating);
-    List<UserRating> findAllByGame(Game game);
+    Optional<UserRating> getUserRating(User user, Game game);
+
+    List<UserRating> getRatingsByUser(User user);
+
+    List<UserRating> getRatingsByGame(Game game);
+
+    UserRating saveRating(UserRating userRating);
+
+    UserRating rateOrUpdateRating(User user, Game game, Double rating);
+
+    void deleteRating(User user, Game game);
 }

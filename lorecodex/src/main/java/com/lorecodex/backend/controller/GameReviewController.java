@@ -6,70 +6,134 @@ import com.lorecodex.backend.mapper.ReviewMapper;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.Review;
 import com.lorecodex.backend.model.User;
-import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/games")
+@RequestMapping("/api/games/reviews")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class GameReviewController {
 
     private final ReviewService reviewService;
     private final ReviewMapper reviewMapper;
-    private final GameRepository gameRepository;
 
     @Autowired
-    public GameReviewController(ReviewService reviewService, ReviewMapper reviewMapper, GameRepository gameRepository) {
+    public GameReviewController(ReviewService reviewService, ReviewMapper reviewMapper) {
         this.reviewService = reviewService;
         this.reviewMapper = reviewMapper;
-        this.gameRepository = gameRepository;
     }
 
-    // Get all reviews for a specific game
-    @GetMapping("/{gameId}/reviews")
+    // ------------------------ Públicos ------------------------
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ReviewDTO>> getAllReviews() {
+        List<Review> reviews = reviewService.getAllReviews();
+        return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
+    }
+
+    @GetMapping("/game/{gameId}")
     public ResponseEntity<List<ReviewDTO>> getReviewsByGame(@PathVariable Long gameId) {
         List<Review> reviews = reviewService.getReviewsByGameId(gameId);
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
 
-    // Create a review for a specific game
-    @PostMapping("/{gameId}/reviews")
-    public ResponseEntity<?> createReviewForGame(
-            @PathVariable Long gameId,
-            @RequestBody ReviewRequest reviewRequest,
-            @AuthenticationPrincipal User user) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ReviewDTO> getReviewById(@PathVariable Long id) {
+        return reviewService.getReviewById(id)
+                .map(review -> ResponseEntity.ok(reviewMapper.toDTO(review)))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{id}/like")
+    public ResponseEntity<ReviewDTO> likeReview(@PathVariable Long id) {
+        Review likedReview = reviewService.incrementLikes(id);
+        return ResponseEntity.ok(reviewMapper.toDTO(likedReview));
+    }
 
-        // Verify the game exists
-        Game game = gameRepository.findById(gameId)
-                .orElse(null);
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{id}/dislike")
+    public ResponseEntity<ReviewDTO> dislikeReview(@PathVariable Long id) {
+        Review dislikedReview = reviewService.incrementDislikes(id);
+        return ResponseEntity.ok(reviewMapper.toDTO(dislikedReview));
+    }
 
-        if (game == null) {
-            return ResponseEntity.notFound().build();
-        }
+    // ------------------------ Requieren autenticación ------------------------
 
-        // Update the request with the game ID
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/my")
+    public ResponseEntity<List<ReviewDTO>> getCurrentUserReviews(@AuthenticationPrincipal User user) {
+        List<Review> reviews = reviewService.getReviewsByUserId(user.getId());
+        return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/game/{gameId}/createReview")
+    public ResponseEntity<?> createReviewForGame(@PathVariable Long gameId,
+                                                 @RequestBody ReviewRequest reviewRequest,
+                                                 @AuthenticationPrincipal User user) {
         reviewRequest.setGameId(gameId);
-
         try {
             Review review = reviewMapper.toEntity(reviewRequest, user);
             Review savedReview = reviewService.createReview(review);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(reviewMapper.toDTO(savedReview));
+            return ResponseEntity.status(HttpStatus.CREATED).body(reviewMapper.toDTO(savedReview));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateReview(@PathVariable Long id,
+                                          @RequestBody ReviewRequest reviewRequest,
+                                          @AuthenticationPrincipal User user) {
+        return reviewService.getReviewById(id)
+                .map(existingReview -> {
+                    if (!reviewService.canUserModifyReview(user, existingReview)) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have permission to modify this review");
+                    }
+
+                    if (!existingReview.getUser().getId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins can only delete reviews, not edit them");
+                    }
+
+                    reviewMapper.updateEntityFromRequest(existingReview, reviewRequest);
+                    Review updatedReview = reviewService.updateReview(id, existingReview);
+                    return ResponseEntity.ok(reviewMapper.toDTO(updatedReview));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id,
+                                          @AuthenticationPrincipal User user) {
+
+        return reviewService.getReviewById(id)
+                .map(review -> {
+                    if (!reviewService.canUserModifyReview(user, review)) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have permission to delete this review");
+                    }
+
+                    reviewService.deleteReview(id);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ------------------------ Admin ------------------------
+
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsAdmin() {
+        List<Review> reviews = reviewService.getAllReviews();
+        return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
 }

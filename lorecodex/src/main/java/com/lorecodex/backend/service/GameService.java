@@ -11,9 +11,5 @@ public interface GameService {
     Game createGame(Game game);
     Game updateGame(Long id, Game game);
     void deleteGame(Long id);
-    Game incrementLikes(Long id);
-    Game rateGame(Long gameId, Double rating, User user);
-    Double getUserRatingForGame(Long gameId, Long userId);
     List<Game> findGamesByTitle(String title);
-    Double calculateAverageRating(Long gameId);
 }
