@@ -32,7 +32,7 @@ public class GameController {
     }
 
     // Endpoint público para obtener todos los juegos
-    @GetMapping
+    @GetMapping("/allGames")
     public ResponseEntity<List<GameDTO>> getAllGames(@RequestParam(required = false) String title) {
         List<Game> games;
 

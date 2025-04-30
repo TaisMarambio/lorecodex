@@ -47,19 +47,17 @@ public class SecurityConfig  {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
                         // Frontend compatibility endpoints
-                        .requestMatchers("/games").permitAll()
-                        .requestMatchers("/games/**").permitAll()
                         .requestMatchers("/admin/games").hasRole("ADMIN")
                         .requestMatchers("/admin/games/**").hasRole("ADMIN")
 
                         // Original API endpoints
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/games").permitAll()
                         .requestMatchers("/guides/published").permitAll()
                         .requestMatchers("/guides/{id}").permitAll()
                         .requestMatchers("/guides/**").hasRole("USER")
                         .requestMatchers("/api/games").permitAll()
+                        .requestMatchers("api/games/allGames").permitAll()
                         .requestMatchers("/api/games/{id}").permitAll()
                         .requestMatchers("/api/games/{id}/like").permitAll()
                         .requestMatchers("/api/games/**").authenticated()
