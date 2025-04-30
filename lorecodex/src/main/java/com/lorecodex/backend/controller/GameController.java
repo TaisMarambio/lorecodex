@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/games")
@@ -105,11 +106,8 @@ public class GameController {
         }
 
         Double userRating = gameService.getUserRatingForGame(id, user.getId());
-        if (userRating == null) {
-            return ResponseEntity.ok(new UserRatingDTO(id, 0.0));
-        }
+        return ResponseEntity.ok(new UserRatingDTO(id, Objects.requireNonNullElse(userRating, 0.0)));
 
-        return ResponseEntity.ok(new UserRatingDTO(id, userRating));
     }
 
     // Endpoint para actualizar el rating de un juego (requiere autenticación)
