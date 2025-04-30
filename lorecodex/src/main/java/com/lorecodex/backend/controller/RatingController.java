@@ -10,6 +10,7 @@ import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,7 +35,8 @@ public class RatingController {
         this.ratingMapper = ratingMapper;
     }
 
-    @PostMapping("/setRating")
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/setRating/{gameId}")
     public ResponseEntity<?> rateGame(@RequestBody UserRatingRequest request,
                                       @AuthenticationPrincipal User user) {
         Optional<Game> gameOpt = gameRepository.findById(request.getGameId());
@@ -43,6 +45,7 @@ public class RatingController {
         return ResponseEntity.ok(ratingMapper.toDTO(rating));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/my/{gameId}")
     public ResponseEntity<?> getMyRatingForGame(@PathVariable Long gameId,
                                                 @AuthenticationPrincipal User user) {
@@ -67,6 +70,7 @@ public class RatingController {
         return ResponseEntity.ok(responseList);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/my")
     public ResponseEntity<?> getAllRatingsByCurrentUser(@AuthenticationPrincipal User user) {
 
@@ -78,6 +82,7 @@ public class RatingController {
         return ResponseEntity.ok(responseList);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete/{gameId}")
     public ResponseEntity<?> deleteRating(@PathVariable Long gameId,
                                           @AuthenticationPrincipal User user) {
@@ -90,14 +95,9 @@ public class RatingController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoint público para obtener el promedio de rating de un juego
-   /* @GetMapping("/{gameId}/average-rating")
-    public ResponseEntity<Double> getAverageRating(@PathVariable Long gameId) {
-        Double averageRating = gameService.getGameById(gameId)
-                .map(game -> gameService.calculateAverageRating(game.getId()))
-                .orElse(0.0);
-
-        return ResponseEntity.ok(averageRating);
-    }*/
-
+    @GetMapping("/average-rating/{gameId}")
+    public ResponseEntity<?> getAverageRating(@PathVariable Long gameId) {
+        Double average = userRatingService.getAverageRatingByGameId(gameId);
+        return ResponseEntity.ok(average != null ? average : 0.0);
+    }
 }

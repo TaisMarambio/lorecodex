@@ -70,6 +70,8 @@ public class SecurityConfig  {
                         .requestMatchers("/api/games/reviews/**").permitAll()
                         .requestMatchers("/api/games/reviews/game/**").permitAll()
 
+                        //Rating endpoints
+                        .requestMatchers("/api/games/rating/**").permitAll()
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                 )

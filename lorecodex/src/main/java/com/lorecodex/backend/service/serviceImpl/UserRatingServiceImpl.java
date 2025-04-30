@@ -54,4 +54,9 @@ public class UserRatingServiceImpl implements UserRatingService {
     public void deleteRating(User user, Game game) {
         userRatingRepository.deleteByUserAndGame(user, game);
     }
+
+    @Override
+    public Double getAverageRatingByGameId(Long gameId) {
+        return userRatingRepository.findAverageRatingByGameId(gameId);
+    }
 }

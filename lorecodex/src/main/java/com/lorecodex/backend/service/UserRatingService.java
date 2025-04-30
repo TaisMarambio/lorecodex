@@ -18,4 +18,6 @@ public interface UserRatingService {
     UserRating rateOrUpdateRating(User user, Game game, Double rating);
 
     void deleteRating(User user, Game game);
+
+    Double getAverageRatingByGameId(Long gameId);
 }
