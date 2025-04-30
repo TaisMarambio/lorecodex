@@ -57,6 +57,8 @@ public class SecurityConfig  {
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/games").permitAll()
+                        .requestMatchers("/guides/published").permitAll()
+                        .requestMatchers("/guides/{id}").permitAll()
                         .requestMatchers("/guides/**").hasRole("USER")
                         .requestMatchers("/api/games").permitAll()
                         .requestMatchers("/api/games/{id}").permitAll()
