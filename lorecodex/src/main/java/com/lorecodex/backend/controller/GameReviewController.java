@@ -1,7 +1,7 @@
 package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.ReviewRequest;
-import com.lorecodex.backend.dto.response.ReviewDTO;
+import com.lorecodex.backend.dto.response.ReviewResponse;
 import com.lorecodex.backend.mapper.ReviewMapper;
 import com.lorecodex.backend.model.Review;
 import com.lorecodex.backend.model.User;
@@ -32,19 +32,19 @@ public class GameReviewController {
     // ------------------------ Públicos ------------------------
 
     @GetMapping("/all")
-    public ResponseEntity<List<ReviewDTO>> getAllReviews() {
+    public ResponseEntity<List<ReviewResponse>> getAllReviews() {
         List<Review> reviews = reviewService.getAllReviews();
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
 
     @GetMapping("/game/{gameId}")
-    public ResponseEntity<List<ReviewDTO>> getReviewsByGame(@PathVariable Long gameId) {
+    public ResponseEntity<List<ReviewResponse>> getReviewsByGame(@PathVariable Long gameId) {
         List<Review> reviews = reviewService.getReviewsByGameId(gameId);
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReviewDTO> getReviewById(@PathVariable Long id) {
+    public ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id) {
         return reviewService.getReviewById(id)
                 .map(review -> ResponseEntity.ok(reviewMapper.toDTO(review)))
                 .orElse(ResponseEntity.notFound().build());
@@ -52,14 +52,14 @@ public class GameReviewController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/like")
-    public ResponseEntity<ReviewDTO> likeReview(@PathVariable Long id) {
+    public ResponseEntity<ReviewResponse> likeReview(@PathVariable Long id) {
         Review likedReview = reviewService.incrementLikes(id);
         return ResponseEntity.ok(reviewMapper.toDTO(likedReview));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/dislike")
-    public ResponseEntity<ReviewDTO> dislikeReview(@PathVariable Long id) {
+    public ResponseEntity<ReviewResponse> dislikeReview(@PathVariable Long id) {
         Review dislikedReview = reviewService.incrementDislikes(id);
         return ResponseEntity.ok(reviewMapper.toDTO(dislikedReview));
     }
@@ -68,7 +68,7 @@ public class GameReviewController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my")
-    public ResponseEntity<List<ReviewDTO>> getCurrentUserReviews(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<ReviewResponse>> getCurrentUserReviews(@AuthenticationPrincipal User user) {
         List<Review> reviews = reviewService.getReviewsByUserId(user.getId());
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }
@@ -131,7 +131,7 @@ public class GameReviewController {
 
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<List<ReviewDTO>> getAllReviewsAdmin() {
+    public ResponseEntity<List<ReviewResponse>> getAllReviewsAdmin() {
         List<Review> reviews = reviewService.getAllReviews();
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));
     }

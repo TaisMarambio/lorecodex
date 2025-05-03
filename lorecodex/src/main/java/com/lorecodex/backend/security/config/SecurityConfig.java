@@ -74,6 +74,9 @@ public class SecurityConfig  {
                         .requestMatchers("/api/games/rating/**").permitAll()
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        //igdb
+                        .requestMatchers("/api/igdb/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

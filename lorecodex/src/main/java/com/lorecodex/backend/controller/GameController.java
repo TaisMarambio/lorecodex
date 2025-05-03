@@ -1,7 +1,7 @@
 package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.GameRequest;
-import com.lorecodex.backend.dto.response.GameDTO;
+import com.lorecodex.backend.dto.response.GameDetailResponse;
 import com.lorecodex.backend.mapper.GameMapper;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.service.GameService;
@@ -29,7 +29,7 @@ public class GameController {
 
     // Endpoint público para obtener todos los juegos
     @GetMapping("/allGames")
-    public ResponseEntity<List<GameDTO>> getAllGames(@RequestParam(required = false) String title) {
+    public ResponseEntity<List<GameDetailResponse>> getAllGames(@RequestParam(required = false) String title) {
         List<Game> games;
 
         if (title != null && !title.isEmpty()) {
@@ -45,7 +45,7 @@ public class GameController {
 
     // Endpoint público para obtener un juego por ID
     @GetMapping("/{id}")
-    public ResponseEntity<GameDTO> getGameById(@PathVariable Long id) {
+    public ResponseEntity<GameDetailResponse> getGameById(@PathVariable Long id) {
         return gameService.getGameById(id)
                 .map(game -> ResponseEntity.ok(gameMapper.toDTO(game)))
                 .orElse(ResponseEntity.notFound().build());
@@ -54,7 +54,7 @@ public class GameController {
     // Solo los administradores pueden crear juegos
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<GameDTO> createGame(@RequestBody GameRequest gameRequest) {
+    public ResponseEntity<GameDetailResponse> createGame(@RequestBody GameRequest gameRequest) {
         Game game = gameMapper.toEntity(gameRequest);
         Game savedGame = gameService.createGame(game);
         return ResponseEntity
@@ -65,7 +65,7 @@ public class GameController {
     // Solo los administradores pueden actualizar juegos
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<GameDTO> updateGame(@PathVariable Long id, @RequestBody GameRequest gameRequest) {
+    public ResponseEntity<GameDetailResponse> updateGame(@PathVariable Long id, @RequestBody GameRequest gameRequest) {
         return gameService.getGameById(id)
                 .map(existingGame -> {
                     gameMapper.updateEntityFromRequest(existingGame, gameRequest);
@@ -88,7 +88,7 @@ public class GameController {
 
     // Endpoint para dar likes a un juego (puede ser público)
     @PostMapping("/{id}/like")
-    public ResponseEntity<GameDTO> likeGame(@PathVariable Long id) {
+    public ResponseEntity<GameDetailResponse> likeGame(@PathVariable Long id) {
         Game likedGame = gameService.incrementLikes(id);
         return ResponseEntity.ok(gameMapper.toDTO(likedGame));
     }

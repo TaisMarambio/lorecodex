@@ -1,11 +1,13 @@
 package com.lorecodex.backend.service.serviceImpl;
 
+import com.lorecodex.backend.dto.response.igdb.CreateGameFromIgdbRequest;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,8 +64,8 @@ public class GameServiceImpl implements GameService {
         if (gameDetails.getGenres() != null) {
             game.setGenres(gameDetails.getGenres());
         }
-        if (gameDetails.getAwards() != null) {
-            game.setAwards(gameDetails.getAwards());
+        if (gameDetails.getDevelopersAndPublishers() != null) {
+            game.setDevelopersAndPublishers(gameDetails.getDevelopersAndPublishers());
         }
 
         return gameRepository.save(game);
@@ -85,5 +87,27 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
         game.setLikes(game.getLikes() + 1);
         return gameRepository.save(game);
+    }
+
+    @Override
+    public Game importGameFromIgdb(CreateGameFromIgdbRequest request) {
+        // Verificamos si ya existe en la base por título (podés usar ID de IGDB si lo guardás)
+        Optional<Game> existingGame = gameRepository.findByTitleIgnoreCase(request.getTitle());
+
+        if (existingGame.isPresent()) {
+            return existingGame.get(); // ya lo tenés guardado
+        }
+
+        Game newGame = new Game();
+        newGame.setTitle(request.getTitle());
+        newGame.setDescription(request.getDescription());
+        newGame.setCoverImage(request.getCoverImage());
+        newGame.setReleaseDate(request.getReleaseDate());
+        newGame.setRating(0.0); // o null, según tu lógica
+        newGame.setLikes(0);
+        newGame.setGenres(request.getGenres());
+        newGame.setDevelopersAndPublishers(new HashSet<>());
+
+        return gameRepository.save(newGame);
     }
 }

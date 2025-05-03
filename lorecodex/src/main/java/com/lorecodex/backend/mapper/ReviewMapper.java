@@ -1,7 +1,7 @@
 package com.lorecodex.backend.mapper;
 
 import com.lorecodex.backend.dto.request.ReviewRequest;
-import com.lorecodex.backend.dto.response.ReviewDTO;
+import com.lorecodex.backend.dto.response.ReviewResponse;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.Review;
 import com.lorecodex.backend.model.User;
@@ -22,12 +22,12 @@ public class ReviewMapper {
         this.gameRepository = gameRepository;
     }
 
-    public ReviewDTO toDTO(Review review) {
+    public ReviewResponse toDTO(Review review) {
         if (review == null) {
             return null;
         }
 
-        return ReviewDTO.builder()
+        return ReviewResponse.builder()
                 .id(review.getId())
                 .content(review.getContent())
                 .rating(review.getRating())
@@ -41,7 +41,7 @@ public class ReviewMapper {
                 .build();
     }
 
-    public List<ReviewDTO> toDTOList(List<Review> reviews) {
+    public List<ReviewResponse> toDTOList(List<Review> reviews) {
         if (reviews == null) {
             return List.of();
         }

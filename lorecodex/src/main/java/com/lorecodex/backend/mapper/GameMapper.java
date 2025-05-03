@@ -1,7 +1,7 @@
 package com.lorecodex.backend.mapper;
 
 import com.lorecodex.backend.dto.request.GameRequest;
-import com.lorecodex.backend.dto.response.GameDTO;
+import com.lorecodex.backend.dto.response.GameDetailResponse;
 import com.lorecodex.backend.model.Game;
 import org.springframework.stereotype.Component;
 
@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 @Component
 public class GameMapper {
 
-    public GameDTO toDTO(Game game) {
+    public GameDetailResponse toDTO(Game game) {
         if (game == null) {
             return null;
         }
 
-        return GameDTO.builder()
+        return GameDetailResponse.builder()
                 .id(game.getId())
                 .title(game.getTitle())
                 .description(game.getDescription())
@@ -25,11 +25,11 @@ public class GameMapper {
                 .rating(game.getRating())
                 .likes(game.getLikes())
                 .genres(game.getGenres())
-                .awards(game.getAwards())
+                .developersAndPublishers(game.getDevelopersAndPublishers())
                 .build();
     }
 
-    public List<GameDTO> toDTOList(List<Game> games) {
+    public List<GameDetailResponse> toDTOList(List<Game> games) {
         if (games == null) {
             return List.of();
         }
@@ -50,7 +50,7 @@ public class GameMapper {
         game.setCoverImage(gameRequest.getCoverImage());
         game.setReleaseDate(gameRequest.getReleaseDate());
         game.setGenres(gameRequest.getGenres());
-        game.setAwards(gameRequest.getAwards());
+        game.setDevelopersAndPublishers(gameRequest.getDevelopersAndPublishers());
         game.setRating(0.0);
         game.setLikes(0);
 
@@ -73,8 +73,8 @@ public class GameMapper {
         if (gameRequest.getGenres() != null) {
             game.setGenres(gameRequest.getGenres());
         }
-        if (gameRequest.getAwards() != null) {
-            game.setAwards(gameRequest.getAwards());
+        if (gameRequest.getDevelopersAndPublishers() != null) {
+            game.setDevelopersAndPublishers(gameRequest.getDevelopersAndPublishers());
         }
     }
 }

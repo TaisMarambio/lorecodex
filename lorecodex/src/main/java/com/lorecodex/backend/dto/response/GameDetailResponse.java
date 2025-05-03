@@ -10,8 +10,9 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameDTO {
+public class GameDetailResponse {
     private Long id;
+    private Long igdbId;
     private String title;
     private String description;
     private String coverImage;
@@ -19,5 +20,5 @@ public class GameDTO {
     private Double rating;
     private Integer likes;
     private Set<String> genres;
-    private Set<String> awards;
+    private Set<String> developersAndPublishers;
 }

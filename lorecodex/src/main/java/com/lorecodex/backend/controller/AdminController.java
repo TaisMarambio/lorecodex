@@ -1,6 +1,6 @@
 package com.lorecodex.backend.controller;
 
-import com.lorecodex.backend.dto.response.UserDTO;
+import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.mapper.UserMapper;
 import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +25,8 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<UserDTO> users = userMapper.toDTOList(userService.getAllUsers());
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userMapper.toDTOList(userService.getAllUsers());
         return ResponseEntity.ok(users);
     }
 

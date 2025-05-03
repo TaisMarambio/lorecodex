@@ -1,24 +1,19 @@
-package com.lorecodex.backend.dto.request;
+package com.lorecodex.backend.dto.response;
 
 import lombok.*;
+
 import java.time.LocalDate;
 import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameRequest {
+public class GameSearchResponse {
+    private Long igdbId;
     private String title;
-    private Double rating;
-    private String genre;
-    private String description;
     private String coverImage;
     private LocalDate releaseDate;
     private Set<String> genres;
-    private Set<String> developersAndPublishers;
 }

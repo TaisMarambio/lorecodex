@@ -1,7 +1,7 @@
 // Agrego un asignador de usuarios para convertir entre entidades y DTO
 package com.lorecodex.backend.mapper;
 
-import com.lorecodex.backend.dto.response.UserDTO;
+import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.model.Role;
 import com.lorecodex.backend.model.User;
 import org.springframework.stereotype.Component;
@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
 
-    public UserDTO toDTO(User user) {
+    public UserResponse toDTO(User user) {
         if (user == null) {
             return null;
         }
 
-        UserDTO dto = new UserDTO();
+        UserResponse dto = new UserResponse();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
@@ -32,7 +32,7 @@ public class UserMapper {
         return dto;
     }
 
-    public List<UserDTO> toDTOList(List<User> users) {
+    public List<UserResponse> toDTOList(List<User> users) {
         if (users == null) {
             return List.of();
         }

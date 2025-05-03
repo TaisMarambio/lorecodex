@@ -1,11 +1,10 @@
 package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.response.GuideResponse;
-import com.lorecodex.backend.dto.response.UserDTO;
+import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.mapper.UserMapper;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.GuideService;
-import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal User user) {
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
