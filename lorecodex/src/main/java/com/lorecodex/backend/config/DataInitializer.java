@@ -17,7 +17,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Crear el admin por defecto si no existe
+        // Crear el admin por defecto si no existen
         authenticationService.createDefaultAdminIfNotExists();
     }
 }
