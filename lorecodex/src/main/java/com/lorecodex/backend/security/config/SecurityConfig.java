@@ -75,6 +75,17 @@ public class SecurityConfig  {
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
+                        //Challenges endpoints
+                        .requestMatchers("/api/challenges").permitAll()
+                        .requestMatchers("/api/challenges/{id}").permitAll()
+                        .requestMatchers("/api/challenges/game/**").permitAll()
+                        .requestMatchers("/api/challenges/search").permitAll()
+                        .requestMatchers("/api/challenges/user/**").permitAll()
+                        .requestMatchers("/api/challenges/{id}/join").hasRole("USER")
+                        .requestMatchers("/api/challenges/{id}/complete").hasRole("USER")
+                        .requestMatchers("/api/challenges/{id}/rate").hasRole("USER")
+                        .requestMatchers("/admin/challenges/**").hasRole("ADMIN")
+
                         //igdb
                         .requestMatchers("/api/igdb/**").permitAll()
                 )

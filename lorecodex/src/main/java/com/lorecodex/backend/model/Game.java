@@ -50,4 +50,7 @@ public class Game {
 
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Challenge> challenges = new ArrayList<>();
 }

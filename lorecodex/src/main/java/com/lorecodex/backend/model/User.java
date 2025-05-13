@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Entity
 @Getter
@@ -85,4 +86,16 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "creator")
+    private List<Challenge> createdChallenges = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<ChallengeParticipant> challengeParticipations = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<ChallengeDifficultyRating> challengeDifficultyRatings = new ArrayList<>();
 }
