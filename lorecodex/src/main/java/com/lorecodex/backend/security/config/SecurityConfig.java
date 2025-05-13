@@ -77,6 +77,9 @@ public class SecurityConfig  {
 
                         //igdb
                         .requestMatchers("/api/igdb/**").permitAll()
+
+                        //listas
+                        .requestMatchers("/api/lists/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
