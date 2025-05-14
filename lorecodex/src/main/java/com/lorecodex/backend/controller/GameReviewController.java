@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/games/reviews")
+@RequestMapping("/reviews")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class GameReviewController {
 

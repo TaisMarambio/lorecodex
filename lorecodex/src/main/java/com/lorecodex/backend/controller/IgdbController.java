@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/igdb")
+@RequestMapping("/igdb")
 @RequiredArgsConstructor
 public class IgdbController {
     private final IgdbService igdbService;

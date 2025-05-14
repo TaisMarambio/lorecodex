@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/games/rating")
+@RequestMapping("/rating")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class RatingController {
 

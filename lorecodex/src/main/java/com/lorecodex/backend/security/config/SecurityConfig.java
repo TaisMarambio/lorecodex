@@ -53,33 +53,33 @@ public class SecurityConfig  {
                         // Original API endpoints
                         .requestMatchers("/user/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/guides/published").permitAll()
-                        .requestMatchers("/guides/{id}").permitAll()
-                        .requestMatchers("/guides/**").hasRole("USER")
-                        .requestMatchers("/api/games").permitAll()
-                        .requestMatchers("/api/games/allGames").permitAll()
-                        .requestMatchers("/api/games/{id}").permitAll()
-                        .requestMatchers("/api/games/{id}/like").permitAll()
+                        //.requestMatchers("/guides/published").permitAll()
+                        //.requestMatchers("/guides/{id}").permitAll()
+                        //.requestMatchers("/guides/**").hasRole("USER")
+                        .requestMatchers("/games").permitAll()
+                        .requestMatchers("/games/allGames").permitAll()
+                        .requestMatchers("/games/{id}").permitAll()
+                        .requestMatchers("/games/{id}/like").permitAll()
 
-                        // Updated rating endpoints - require authentication
-                        .requestMatchers("/api/games/rating/**").permitAll()
                         //non-required authentication
-                        .requestMatchers("/api/games/{id}/average-rating").permitAll()
+                        .requestMatchers("/games/{id}/average-rating").permitAll()
 
                         // Reviews endpoints
-                        .requestMatchers("/api/games/reviews/**").permitAll()
-                        .requestMatchers("/api/games/reviews/game/**").permitAll()
+                        .requestMatchers("/reviews/**").permitAll()
 
                         //Rating endpoints
-                        .requestMatchers("/api/games/rating/**").permitAll()
+                        .requestMatchers("/rating/**").permitAll()
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         //igdb
-                        .requestMatchers("/api/igdb/**").permitAll()
+                        .requestMatchers("/igdb/**").permitAll()
 
                         //listas
-                        .requestMatchers("/api/lists/**").permitAll()
+                        .requestMatchers("/lists/**").permitAll()
+
+                        //guides
+                        .requestMatchers("/guides/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

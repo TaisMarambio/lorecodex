@@ -31,9 +31,6 @@ public class GuideController {
             @RequestParam(value = "tags", required = false) Set<String> tags,
             @RequestParam(value = "images", required = false) List<MultipartFile> images
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
         GuideRequest guideRequest = GuideRequest.builder()
                 .title(title)
                 .content(content)
@@ -43,6 +40,8 @@ public class GuideController {
                 .tags(tags)
                 .build();
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         GuideResponse response = guideService.createGuide(guideRequest, username, images);
         return ResponseEntity.ok(response);
     }
