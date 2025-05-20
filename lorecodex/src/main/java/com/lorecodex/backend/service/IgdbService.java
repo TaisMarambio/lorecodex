@@ -13,4 +13,5 @@ public interface IgdbService {
     Game importGameFromIgdb(CreateGameFromIgdbRequest request);
     Optional<IgdbGameResponse> getGameById(Long igdbId);
     Optional<Game> importGameById(Long igdbId);
+    List<IgdbGameResponse> getTopGamesList();
 }

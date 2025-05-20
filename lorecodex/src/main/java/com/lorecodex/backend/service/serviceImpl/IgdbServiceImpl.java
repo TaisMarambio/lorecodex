@@ -153,4 +153,26 @@ public class IgdbServiceImpl implements IgdbService {
 
         return Optional.of(gameRepository.save(game));
     }
+
+    @Override
+    public List<IgdbGameResponse> getTopGamesList() {
+        String accessToken = authService.getAccessToken();
+
+        String body = """
+            fields id, name, cover.url, genres.name, release_dates.date, aggregated_rating;
+            sort aggregated_rating desc;
+            where cover != null;
+            limit 10;
+        """;
+
+        return webClient.post()
+                .uri("/games")
+                .header("Client-ID", clientId)
+                .header("Authorization", "Bearer " + accessToken)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToFlux(IgdbGameResponse.class)
+                .collectList()
+                .block();
+    }
 }

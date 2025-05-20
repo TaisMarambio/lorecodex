@@ -23,7 +23,7 @@ public class IgdbGameMapper {
                 .title(igdbGame.getName())
                 .coverImage(
                         igdbGame.getCover() != null
-                                ? "https:" + igdbGame.getCover().getUrl()
+                                ? getFullCoverUrl(igdbGame.getCover().getUrl())
                                 : null)
                 .releaseDate(getFirstReleaseDate(igdbGame))
                 .genres(igdbGame.getGenres() != null
@@ -74,6 +74,11 @@ public class IgdbGameMapper {
                         .toLocalDate())
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String getFullCoverUrl(String rawUrl) {
+        if (rawUrl == null) return null;
+        return "https:" + rawUrl.replace("/t_thumb/", "/t_cover_big/");
     }
 
 }

@@ -48,12 +48,13 @@ public class IgdbController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-
     @GetMapping("/top")
-    public ResponseEntity<String> getTopGames() {
-        String games = igdbService.getTopGames();
-        return ResponseEntity.ok(games);
+    public ResponseEntity<List<GameSearchResponse>> getTopGames() {
+        List<IgdbGameResponse> topGames = igdbService.getTopGamesList();
+        List<GameSearchResponse> response = topGames.stream()
+                .map(igdbGameMapper::toSearchDto)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
     //este es para chequear con un raw que funciona!
