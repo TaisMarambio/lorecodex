@@ -20,7 +20,7 @@ public interface ChallengeDifficultyRatingRepository extends JpaRepository<Chall
     List<ChallengeDifficultyRating> findByChallenge(Challenge challenge);
 
     @Query("SELECT AVG(r.difficultyLevel) FROM ChallengeDifficultyRating r WHERE r.challenge.id = :challengeId")
-    Double findAverageDifficultyByChallengeId(@Param("challengeId") Long challengeId);
+    Integer findAverageDifficultyByChallengeId(@Param("challengeId") Long challengeId);
 
     void deleteByUserAndChallenge(User user, Challenge challenge);
 }

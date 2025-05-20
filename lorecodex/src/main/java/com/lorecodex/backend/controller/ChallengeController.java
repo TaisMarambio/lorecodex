@@ -271,7 +271,7 @@ public class ChallengeController {
     // Get average difficulty of a challenge
     @GetMapping("/{id}/average-difficulty")
     public ResponseEntity<Double> getAverageDifficulty(@PathVariable Long id) {
-        Double averageDifficulty = difficultyRatingService.getAverageDifficultyByChallengeId(id);
+        Integer averageDifficulty = difficultyRatingService.getAverageDifficultyByChallengeId(id);
         return ResponseEntity.ok(averageDifficulty != null ? averageDifficulty : 0.0);
     }
 }

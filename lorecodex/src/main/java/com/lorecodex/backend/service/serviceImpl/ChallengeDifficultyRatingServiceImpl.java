@@ -81,7 +81,7 @@ public class ChallengeDifficultyRatingServiceImpl implements ChallengeDifficulty
     }
 
     @Override
-    public Double getAverageDifficultyByChallengeId(Long challengeId) {
+    public Integer getAverageDifficultyByChallengeId(Long challengeId) {
         return ratingRepository.findAverageDifficultyByChallengeId(challengeId);
     }
 }

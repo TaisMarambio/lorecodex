@@ -26,7 +26,7 @@ public class ChallengeMapper {
         challenge.setCreatedAt(LocalDateTime.now());
         challenge.setParticipantCount(0);
         challenge.setCompletionCount(0);
-        challenge.setAverageDifficulty(0.0);
+        challenge.setAverageDifficulty(0);
         return challenge;
     }
 

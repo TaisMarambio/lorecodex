@@ -119,8 +119,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         challenge.setCompletionCount(completionCount);
 
         // Update average difficulty
-        Double averageDifficulty = difficultyRatingRepository.findAverageDifficultyByChallengeId(challengeId);
-        challenge.setAverageDifficulty(averageDifficulty != null ? averageDifficulty : 0.0);
+        Integer averageDifficulty = difficultyRatingRepository.findAverageDifficultyByChallengeId(challengeId);
+        challenge.setAverageDifficulty(averageDifficulty != null ? averageDifficulty : 0);
 
         // Save the updated challenge
         challengeRepository.save(challenge);

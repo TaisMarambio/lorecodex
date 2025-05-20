@@ -22,7 +22,7 @@ public class ChallengeResponse {
     private LocalDateTime createdAt;
     private Integer participantCount;
     private Integer completionCount;
-    private Double averageDifficulty;
+    private Integer averageDifficulty;
     private Boolean userParticipating;
     private Boolean userCompleted;
     private Integer userDifficultyRating;

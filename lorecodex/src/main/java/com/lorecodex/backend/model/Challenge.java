@@ -51,10 +51,10 @@ public class Challenge {
     @Column(name = "completion_count")
     private Integer completionCount = 0;
 
-    @Column(name = "average_difficulty", precision = 2, scale = 1)
-    private Double averageDifficulty = 0.0;
+    @Column(name = "average_difficulty" )
+    private Integer averageDifficulty = 0;
 
-    // Método para actualizar contador de participantes
+    /*// Método para actualizar contador de participantes
     public void updateParticipantCount() {
         this.participantCount = participants.size();
     }
@@ -77,5 +77,5 @@ public class Challenge {
                 .mapToInt(ChallengeDifficultyRating::getDifficultyLevel)
                 .sum();
         this.averageDifficulty = sum / difficultyRatings.size();
-    }
+    }*/
 }

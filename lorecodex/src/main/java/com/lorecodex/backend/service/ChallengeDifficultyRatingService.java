@@ -18,5 +18,5 @@ public interface ChallengeDifficultyRatingService {
 
     void deleteRating(User user, Challenge challenge);
 
-    Double getAverageDifficultyByChallengeId(Long challengeId);
+    Integer getAverageDifficultyByChallengeId(Long challengeId);
 }
