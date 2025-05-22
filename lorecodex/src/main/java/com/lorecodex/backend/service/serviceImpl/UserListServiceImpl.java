@@ -129,7 +129,13 @@ public class UserListServiceImpl implements UserListService {
                 .description(list.getDescription())
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
-                .items(Collections.emptyList())  // Siempre retornamos una lista vacía cuando no hay items
+                .items(
+                        list.getItems().stream()
+                                .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
+                                .map(this::toItemResponse)
+                                .collect(Collectors.toList())
+                )
+
                 .build();
     }
 
