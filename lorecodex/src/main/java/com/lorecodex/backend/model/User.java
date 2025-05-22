@@ -85,4 +85,6 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    private boolean emailNotificationsEnabled = true;
 }
