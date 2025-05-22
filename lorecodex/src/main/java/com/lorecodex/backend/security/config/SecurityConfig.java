@@ -80,6 +80,7 @@ public class SecurityConfig  {
 
                         //guides
                         .requestMatchers("/guides/**").permitAll()
+                        .requestMatchers("/follow/**").authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
