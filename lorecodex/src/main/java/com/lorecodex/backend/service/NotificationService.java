@@ -1,12 +1,12 @@
 package com.lorecodex.backend.service;
 
-import com.lorecodex.backend.model.Notification;
+import com.lorecodex.backend.dto.response.NotificationResponse;
 
 import java.util.List;
 
 public interface NotificationService {
     void notifyUser(Long recipientId, String message);
-    List<Notification> getNotifications(Long userId);
+    List<NotificationResponse> getNotifications(Long userId);
     void markAsRead(Long notificationId);
 }
 
