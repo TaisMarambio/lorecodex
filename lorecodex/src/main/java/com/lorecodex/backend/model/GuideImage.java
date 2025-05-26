@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(name = "guide_images")
 public class GuideImage {
 
     @Id
@@ -16,7 +17,7 @@ public class GuideImage {
     private String imageUrl;
     private String caption;
 
-    @ManyToOne
-    @JoinColumn(name = "guide_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guide_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_guide_image_guide"))
     private Guide guide;
 }

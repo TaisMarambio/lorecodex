@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 @Entity
 @Getter
 @Setter
+@Table(name = "news_images")
 public class NewsImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +18,7 @@ public class NewsImage {
     private String imageUrl;
     private String caption;
 
-    @ManyToOne
-    @JoinColumn(name = "news_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "news_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_news_image_news"))
     private News news;
 }

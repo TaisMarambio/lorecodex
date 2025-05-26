@@ -80,6 +80,9 @@ public class SecurityConfig  {
 
                         //guides
                         .requestMatchers("/guides/**").permitAll()
+
+                        //news
+                        .requestMatchers("/news/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
