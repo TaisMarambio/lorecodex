@@ -1,15 +1,16 @@
 package com.lorecodex.backend.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 import lombok.Getter;
 import lombok.Setter;
+
+import jakarta.persistence.*;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "guide_images")
-public class GuideImage {
-
+@Table(name = "news_images")
+public class NewsImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,6 +19,6 @@ public class GuideImage {
     private String caption;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guide_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_guide_image_guide"))
-    private Guide guide;
+    @JoinColumn(name = "news_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_news_image_news"))
+    private News news;
 }
