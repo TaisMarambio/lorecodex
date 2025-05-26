@@ -8,11 +8,10 @@ import java.util.Set;
 
 @Getter
 @Setter
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GuideResponse {
+public class NewsResponse {
     private Long id;
     private String title;
     private String content;
@@ -23,8 +22,7 @@ public class GuideResponse {
     private Long userId;
     private int likeCount;
     private List<CommentResponse> comments;
-    private List<GuideImageResponse> images;
+    private List<NewsImageResponse> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

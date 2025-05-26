@@ -17,10 +17,11 @@ public class UserMapper {
             return null;
         }
 
-        UserResponse dto = new UserResponse();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
+        UserResponse dto = UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
 
         if (user.getRoles() != null) {
             List<String> roleNames = user.getRoles().stream()

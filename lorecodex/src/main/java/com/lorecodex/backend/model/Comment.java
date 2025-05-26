@@ -29,4 +29,8 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "guide_id")
     private Guide guide;
+
+    @ManyToOne
+    @JoinColumn(name = "news_id")
+    private News news;
 }
