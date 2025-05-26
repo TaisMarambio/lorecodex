@@ -3,11 +3,13 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.model.Follow;
 import com.lorecodex.backend.model.User;
+import com.lorecodex.backend.notification.event.FollowedUserEvent;
 import com.lorecodex.backend.repository.FollowRepository;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.FollowService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +21,7 @@ public class FollowServiceImpl implements FollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -41,6 +44,8 @@ public class FollowServiceImpl implements FollowService {
                 .build();
 
         followRepository.save(follow);
+
+        eventPublisher.publishEvent(new FollowedUserEvent(followingId, follower.getUsername()));
     }
 
     @Override

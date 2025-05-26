@@ -19,18 +19,19 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String content;
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "guide_id")
+    @JoinColumn(name = "guide_id", nullable = true)
     private Guide guide;
 
     @ManyToOne
-    @JoinColumn(name = "news_id")
+    @JoinColumn(name = "news_id", nullable = true)
     private News news;
 }
