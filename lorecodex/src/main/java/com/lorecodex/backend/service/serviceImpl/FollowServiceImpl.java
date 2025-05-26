@@ -6,6 +6,7 @@ import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.repository.FollowRepository;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.FollowService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public void followUser(Long followerId, Long followingId) {
         if (followerId.equals(followingId)) {
             throw new RuntimeException("You can't follow yourself");
@@ -42,6 +44,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional
     public void unfollowUser(Long followerId, Long followingId) {
         followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
     }
