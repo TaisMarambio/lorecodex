@@ -188,7 +188,7 @@ public class GuideServiceImpl implements GuideService {
             List<CommentResponse> comments = guide.getComments().stream().map(comment -> {
                 CommentResponse res = new CommentResponse();
                 res.setId(comment.getId());
-                res.setText(comment.getContent());
+                res.setContent(comment.getContent());
                 res.setUserId(comment.getUser().getId());
                 res.setUsername(comment.getUser().getUsername());
                 res.setCreatedAt(comment.getCreatedAt());

@@ -1,13 +1,15 @@
 package com.lorecodex.backend.dto.response;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommentResponse {
     private Long id;
     private String content;

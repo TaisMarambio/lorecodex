@@ -55,7 +55,7 @@ public class NewsMapper {
                 .comments(news.getComments() != null
                         ? news.getComments().stream().map(c -> CommentResponse.builder()
                                 .id(c.getId())
-                                .text(c.getContent())
+                                .content(c.getContent())
                                 .createdAt(c.getCreatedAt())
                                 .userId(c.getUser().getId())
                                 .username(c.getUser().getUsername())
