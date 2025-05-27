@@ -17,16 +17,14 @@ public class GuideResponse {
     private String title;
     private String content;
     private String coverImageUrl;
-    @Setter
     private boolean isPublished;
-    @Setter
     private boolean isDraft;
     private Set<String> tags;
     private Long userId;
+    private Long gameId; // Add this field
     private int likeCount;
     private List<CommentResponse> comments;
     private List<GuideImageResponse> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }
