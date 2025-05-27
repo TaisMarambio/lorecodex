@@ -42,7 +42,7 @@ public class GuideController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        GuideResponse response = guideService.createGuide(guideRequest, username, images);
+        GuideResponse response = guideService.createGuide(guideRequest, username, null);
         return ResponseEntity.ok(response);
     }
 

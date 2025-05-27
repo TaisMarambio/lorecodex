@@ -45,6 +45,13 @@ public class GuideServiceImpl implements GuideService {
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
 
+        // Manejar gameId si está presente
+        if (request.getGameId() != null) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Game not found"));
+            guide.setGame(game);
+        }
+
         // Si después queremos procesar las imágenes subidas, acá podríamos guardarlas
         if (request.getImages() != null) {
             List<GuideImage> imagesFromRequest = request.getImages().stream().map(imgReq -> {
@@ -56,11 +63,6 @@ public class GuideServiceImpl implements GuideService {
             }).collect(Collectors.toList());
             guide.setImages(imagesFromRequest);
         }
-
-        // (Opcional) Procesar imágenes subidas desde MultipartFile
-        // if (images != null && !images.isEmpty()) {
-        // TODO: procesar imágenes subidas reales
-        // }
 
         Guide saved = guideRepository.save(guide);
         return mapToResponse(saved);
