@@ -24,7 +24,6 @@ public class GuideServiceImpl implements GuideService {
 
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
-    private final GameRepository gameRepository;
 
     @Override
     @Transactional

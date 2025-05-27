@@ -24,11 +24,11 @@ public class Comment {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "guide_id", nullable = true)
+    @JoinColumn(name = "guide_id")
     private Guide guide;
 
     @ManyToOne
-    @JoinColumn(name = "news_id", nullable = true)
+    @JoinColumn(name = "news_id")
     private News news;
 
     @ManyToOne
