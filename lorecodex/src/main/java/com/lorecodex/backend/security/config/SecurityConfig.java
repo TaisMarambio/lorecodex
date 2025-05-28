@@ -84,6 +84,9 @@ public class SecurityConfig  {
 
                         //news
                         .requestMatchers("/news/**").permitAll()
+
+                        .requestMatchers("/notifications/**").authenticated()
+                        .requestMatchers("/comments/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

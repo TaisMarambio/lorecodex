@@ -61,4 +61,9 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Override
+    public List<Long> getFollowersOfUser(Long userId) {
+        return List.of();
+    }
+
 }

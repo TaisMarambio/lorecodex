@@ -42,4 +42,6 @@ public class NotificationController {
         notificationService.notifyUser(request.getRecipientId(), request.getMessage());
         return ResponseEntity.ok().build();
     }
+
+
 }

@@ -2,17 +2,15 @@ package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.GuideRequest;
 import com.lorecodex.backend.dto.response.GuideResponse;
+import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.GuideService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/guides")
@@ -21,78 +19,84 @@ public class GuideController {
 
     private final GuideService guideService;
 
-    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/create")
     public ResponseEntity<GuideResponse> createGuide(
-            @RequestParam("title") String title,
-            @RequestParam("content") String content,
-            @RequestParam(value = "coverImageUrl", required = false) String coverImageUrl,
-            @RequestParam("isPublished") boolean isPublished,
-            @RequestParam("isDraft") boolean isDraft,
-            @RequestParam(value = "tags", required = false) Set<String> tags,
-            @RequestParam(value = "images", required = false) List<MultipartFile> images
+            @RequestBody GuideRequest request,
+            @AuthenticationPrincipal User user
     ) {
-        GuideRequest guideRequest = GuideRequest.builder()
-                .title(title)
-                .content(content)
-                .coverImageUrl(coverImageUrl)
-                .isPublished(isPublished)
-                .isDraft(isDraft)
-                .tags(tags)
-                .build();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        GuideResponse response = guideService.createGuide(guideRequest, username, images);
+        GuideResponse response = guideService.createGuide(request, user.getUsername(), null);
         return ResponseEntity.ok(response);
     }
 
+    // Subir imagen de portada por separado
+    @PostMapping("/{guideId}/upload-cover")
+    public ResponseEntity<String> uploadCover(
+            @PathVariable Long guideId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        String url = guideService.uploadCoverImage(guideId, file);
+        return ResponseEntity.ok(url);
+    }
 
-
+    //Obtener una guia por id
     @GetMapping("/{id}")
     public ResponseEntity<GuideResponse> getGuide(@PathVariable Long id) {
         return ResponseEntity.ok(guideService.getGuide(id));
     }
 
-    @GetMapping
+    // obtener todas las guías
+    @GetMapping("/all")
     public ResponseEntity<List<GuideResponse>> getAllGuides() {
         return ResponseEntity.ok(guideService.getAllGuides());
     }
 
-    @GetMapping("/published")
+    // obtener solo las guías publicadas
+    @GetMapping("/all/published")
     public ResponseEntity<List<GuideResponse>> getPublishedGuides() {
         return ResponseEntity.ok(guideService.getPublishedGuides());
     }
 
-    @PutMapping("/{id}")
+    // actualizar guia
+    @PutMapping("/update/{id}")
     public ResponseEntity<GuideResponse> updateGuide(
             @PathVariable Long id,
-            @RequestPart("title") String title,
-            @RequestPart("content") String content,
-            @RequestPart("isDraft") String isDraftStr,
-            @RequestPart("isPublished") String isPublishedStr,
-            @RequestPart(value = "coverImage", required = false) MultipartFile coverImage
+            @RequestBody GuideRequest request,
+            @AuthenticationPrincipal User user
     ) {
-        GuideRequest request = new GuideRequest();
-        request.setTitle(title);
-        request.setContent(content);
-        request.setDraft(Boolean.parseBoolean(isDraftStr));
-        request.setPublished(Boolean.parseBoolean(isPublishedStr));
-
-        // para q despúes manejemos coverImage, se maneja acá.
-
         GuideResponse updated = guideService.updateGuide(id, request);
         return ResponseEntity.ok(updated);
     }
 
+    // eliminar
     @DeleteMapping("/deleteGuide/{id}")
     public ResponseEntity<Void> deleteGuide(@PathVariable Long id) {
         guideService.deleteGuide(id);
         return ResponseEntity.noContent().build();
     }
 
+    // Like con usuario autenticado, no se pasa userId
     @PostMapping("/{id}/like")
-    public ResponseEntity<Void> likeGuide(@PathVariable Long id, @RequestParam Long userId) {
-        guideService.likeGuide(id, userId);
+    public ResponseEntity<Void> likeGuide(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        guideService.likeGuide(id, user.getId());
         return ResponseEntity.ok().build();
+    }
+
+    //publicar una guia
+    @PostMapping("/{id}/publish")
+    public ResponseEntity<GuideResponse> publishGuide(@PathVariable Long id) {
+        return guideService.publishGuide(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // despublicar una guia
+    @PostMapping("/{id}/unpublish")
+    public ResponseEntity<GuideResponse> unpublishGuide(@PathVariable Long id) {
+        return guideService.unpublishGuide(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
