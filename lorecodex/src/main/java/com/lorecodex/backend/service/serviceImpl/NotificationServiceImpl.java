@@ -9,11 +9,13 @@ import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.EmailService;
 import com.lorecodex.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
@@ -36,6 +38,7 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
 
         if (recipient.isEmailNotificationsEnabled()) {
+            log.info("Email enviado al usuario " + recipient.getEmail()); //debug
             emailService.sendNotificationEmail(
                     recipient.getEmail(),
                     "Nueva notificación en LoreCodex",

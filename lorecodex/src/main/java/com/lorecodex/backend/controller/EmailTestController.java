@@ -17,7 +17,7 @@ public class EmailTestController {
 
     @PostMapping
     public ResponseEntity<Void> sendTestEmail(@RequestParam String to) {
-        emailService.sendNotificationEmail(to, "Prueba LoreCodex", "Este es un correo de prueba desde Mailtrap!");
+        emailService.sendNotificationEmail(to, "Prueba LoreCodex 2", "Este es un correo de prueba desde Mailtrap!");
         return ResponseEntity.ok().build();
     }
 }

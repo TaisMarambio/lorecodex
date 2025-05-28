@@ -87,6 +87,8 @@ public class SecurityConfig  {
 
                         .requestMatchers("/notifications/**").authenticated()
                         .requestMatchers("/comments/**").permitAll()
+                        .requestMatchers("/test-email/**").permitAll()
+                        .requestMatchers("settings/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
