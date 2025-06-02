@@ -52,6 +52,9 @@ public class NewsServiceImpl implements NewsService {
         News news = newsMapper.toEntity(request, user);
         news.setCreatedAt(LocalDateTime.now());
         news.setUpdatedAt(LocalDateTime.now());
+        news.setDraft(true); // Set draft to true by default
+        news.setPublished(false); // Set published to false by default
+
 
         return newsMapper.toResponse(newsRepository.save(news));
     }

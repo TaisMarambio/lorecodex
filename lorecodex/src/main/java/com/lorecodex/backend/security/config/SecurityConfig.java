@@ -80,6 +80,7 @@ public class SecurityConfig  {
 
                         //guides
                         .requestMatchers("/guides/**").permitAll()
+                        .requestMatchers("/follow/**").authenticated()
 
                         //challenges
                         .requestMatchers("/challenges").permitAll()
@@ -94,6 +95,13 @@ public class SecurityConfig  {
                         .requestMatchers("/challenges/{id}/complete").authenticated()
                         .requestMatchers("/challenges/{id}/leave").authenticated()
                         .requestMatchers("/challenges/{id}/rate-difficulty").authenticated()
+                        //news
+                        .requestMatchers("/news/**").permitAll()
+
+                        .requestMatchers("/notifications/**").authenticated()
+                        .requestMatchers("/comments/**").permitAll()
+                        .requestMatchers("/test-email/**").permitAll()
+                        .requestMatchers("settings/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

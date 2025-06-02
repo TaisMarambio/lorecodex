@@ -4,11 +4,15 @@ import com.lorecodex.backend.dto.request.GuideRequest;
 import com.lorecodex.backend.dto.response.GuideResponse;
 import com.lorecodex.backend.dto.response.GuideImageResponse;
 import com.lorecodex.backend.dto.response.CommentResponse;
+import com.lorecodex.backend.mapper.GuideMapper;
 import com.lorecodex.backend.model.*;
+import com.lorecodex.backend.notification.event.GuideCreatedEvent;
+import com.lorecodex.backend.notification.event.GuideUpdatedEvent;
 import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.GuideService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,7 +29,8 @@ public class GuideServiceImpl implements GuideService {
 
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
-    private final GameRepository gameRepository;
+    private final GuideMapper guideMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -40,20 +46,12 @@ public class GuideServiceImpl implements GuideService {
         guide.setCoverImageUrl(request.getCoverImageUrl());
         guide.setTags(request.getTags());
         guide.setPublished(request.isPublished());
-        guide.setDraft(request.isDraft());
+        guide.setDraft(true);
         guide.setUser(user);
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
 
-        // Handle gameId if present
-        if (request.getGameId() != null) {
-            Game game = gameRepository.findById(request.getGameId())
-                    .orElseThrow(() -> new RuntimeException("Game not found with id: " + request.getGameId()));
-            guide.setGame(game);
-        }
-
-        // Handle images if present
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
+        if (request.getImages() != null) {
             List<GuideImage> imagesFromRequest = request.getImages().stream().map(imgReq -> {
                 GuideImage image = new GuideImage();
                 image.setImageUrl(imgReq.getImageUrl());
@@ -64,21 +62,27 @@ public class GuideServiceImpl implements GuideService {
             guide.setImages(imagesFromRequest);
         }
 
+        // (Opcional) Procesar imágenes subidas desde MultipartFile
+        // if (images != null && !images.isEmpty()) {
+        // TODO: procesar imágenes subidas reales
+        // }
+
         Guide saved = guideRepository.save(guide);
-        return mapToResponse(saved);
+        eventPublisher.publishEvent(new GuideCreatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        return guideMapper.mapToResponse(saved);
     }
 
     @Override
     public GuideResponse getGuide(Long id) {
         Guide guide = guideRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + id));
-        return mapToResponse(guide);
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        return guideMapper.mapToResponse(guide);
     }
 
     @Override
     public List<GuideResponse> getAllGuides() {
         return guideRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(guideMapper::mapToResponse)
                 .collect(Collectors.toList());
     }
 
@@ -86,7 +90,7 @@ public class GuideServiceImpl implements GuideService {
     @Transactional
     public GuideResponse updateGuide(Long id, GuideRequest request) {
         Guide guide = guideRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
 
         guide.setTitle(request.getTitle());
         guide.setContent(request.getContent());
@@ -96,18 +100,8 @@ public class GuideServiceImpl implements GuideService {
         guide.setDraft(request.isDraft());
         guide.setUpdatedAt(LocalDateTime.now());
 
-        // Handle gameId update if present
-        if (request.getGameId() != null) {
-            Game game = gameRepository.findById(request.getGameId())
-                    .orElseThrow(() -> new RuntimeException("Game not found with id: " + request.getGameId()));
-            guide.setGame(game);
-        }
-
-        // Handle images update
-        if (guide.getImages() != null) {
-            guide.getImages().clear();
-        }
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
+        guide.getImages().clear();
+        if (request.getImages() != null) {
             List<GuideImage> newImages = request.getImages().stream().map(imgReq -> {
                 GuideImage image = new GuideImage();
                 image.setImageUrl(imgReq.getImageUrl());
@@ -118,29 +112,24 @@ public class GuideServiceImpl implements GuideService {
             guide.getImages().addAll(newImages);
         }
 
-        return mapToResponse(guideRepository.save(guide));
+        Guide saved = guideRepository.save(guide);
+        eventPublisher.publishEvent(new GuideUpdatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        return guideMapper.mapToResponse(saved);
     }
 
     @Override
     public void deleteGuide(Long id) {
-        if (!guideRepository.existsById(id)) {
-            throw new RuntimeException("Guide not found with id: " + id);
-        }
         guideRepository.deleteById(id);
     }
 
     @Override
     public void likeGuide(Long guideId, Long userId) {
         Guide guide = guideRepository.findById(guideId)
-                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + guideId));
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (guide.getLikedBy().contains(user)) {
-            guide.getLikedBy().remove(user); // Unlike if already liked
-        } else {
-            guide.getLikedBy().add(user); // Like if not already liked
-        }
+        guide.getLikedBy().add(user); // podriamos controlar si ya le dieron like o no
         guideRepository.save(guide);
     }
 
@@ -148,81 +137,73 @@ public class GuideServiceImpl implements GuideService {
     public List<GuideResponse> getDraftsByUserId(Long userId) {
         List<Guide> drafts = guideRepository.findByUserIdAndIsDraftTrue(userId);
         return drafts.stream()
-                .map(this::mapToResponse)
-                .toList();
+                .map(guideMapper::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<GuideResponse> getPublishedGuidesByUserId(Long id) {
-        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getDraftsByUserIdAndPublished(Long id, boolean published) {
-        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getPublishedGuidesByUserIdAndDraft(Long id, boolean draft) {
-        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getDraftsByUserIdAndPublishedAndDraft(Long id, boolean published, boolean draft) {
-        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getPublishedGuides() {
         return guideRepository.findByIsPublishedTrue().stream()
-                .map(this::mapToResponse)
-                .toList();
+                .map(guideMapper::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    // Internal mapper
-    private GuideResponse mapToResponse(Guide guide) {
-        GuideResponse response = new GuideResponse();
-        response.setId(guide.getId());
-        response.setTitle(guide.getTitle());
-        response.setContent(guide.getContent());
-        response.setCoverImageUrl(guide.getCoverImageUrl());
-        response.setTags(guide.getTags());
-        response.setPublished(guide.isPublished());
-        response.setDraft(guide.isDraft());
-        response.setUserId(guide.getUser() != null ? guide.getUser().getId() : null);
-        response.setLikeCount(guide.getLikedBy() != null ? guide.getLikedBy().size() : 0);
-        response.setCreatedAt(guide.getCreatedAt());
-        response.setUpdatedAt(guide.getUpdatedAt());
+    @Override
+    public String uploadCoverImage(Long guideId, MultipartFile file) {
+        return "";
+    }
 
-        // Map images if present
-        if (guide.getImages() != null && !guide.getImages().isEmpty()) {
-            List<GuideImageResponse> images = guide.getImages().stream().map(img -> {
-                GuideImageResponse res = new GuideImageResponse();
-                res.setImageUrl(img.getImageUrl());
-                res.setCaption(img.getCaption());
-                return res;
-            }).collect(Collectors.toList());
-            response.setImages(images);
+    @Override
+    public Optional<GuideResponse> publishGuide(Long id) {
+        Guide guide = guideRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+
+        if (guide.isPublished()) {
+            throw new RuntimeException("La guía ya está publicada");
         }
 
-        // Map comments if present
-        if (guide.getComments() != null && !guide.getComments().isEmpty()) {
-            List<CommentResponse> comments = guide.getComments().stream().map(comment -> {
-                CommentResponse res = new CommentResponse();
-                res.setId(comment.getId());
-                res.setText(comment.getContent());
-                res.setUserId(comment.getUser() != null ? comment.getUser().getId() : null);
-                res.setUsername(comment.getUser() != null ? comment.getUser().getUsername() : "Unknown");
-                res.setCreatedAt(comment.getCreatedAt());
-                return res;
-            }).collect(Collectors.toList());
-            response.setComments(comments);
+        guide.setPublished(true);
+        guide.setDraft(false);
+        guide.setUpdatedAt(LocalDateTime.now());
+
+        Guide savedGuide = guideRepository.save(guide);
+        return Optional.of(guideMapper.mapToResponse(savedGuide));
+    }
+
+    @Override
+    public Optional<GuideResponse> unpublishGuide(Long id) {
+        Guide guide = guideRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+
+        if (!guide.isPublished()) {
+            throw new RuntimeException("La guía ya está sin publicar");
         }
 
-        return response;
+        guide.setPublished(false);
+        guide.setDraft(true);
+        guide.setUpdatedAt(LocalDateTime.now());
+
+        Guide savedGuide = guideRepository.save(guide);
+        return Optional.of(guideMapper.mapToResponse(savedGuide));
     }
 }
