@@ -45,8 +45,15 @@ public class GuideServiceImpl implements GuideService {
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
 
-        // Si después queremos procesar las imágenes subidas, acá podríamos guardarlas
-        if (request.getImages() != null) {
+        // Handle gameId if present
+        if (request.getGameId() != null) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Game not found with id: " + request.getGameId()));
+            guide.setGame(game);
+        }
+
+        // Handle images if present
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<GuideImage> imagesFromRequest = request.getImages().stream().map(imgReq -> {
                 GuideImage image = new GuideImage();
                 image.setImageUrl(imgReq.getImageUrl());
@@ -57,11 +64,6 @@ public class GuideServiceImpl implements GuideService {
             guide.setImages(imagesFromRequest);
         }
 
-        // (Opcional) Procesar imágenes subidas desde MultipartFile
-        // if (images != null && !images.isEmpty()) {
-        // TODO: procesar imágenes subidas reales
-        // }
-
         Guide saved = guideRepository.save(guide);
         return mapToResponse(saved);
     }
@@ -69,7 +71,7 @@ public class GuideServiceImpl implements GuideService {
     @Override
     public GuideResponse getGuide(Long id) {
         Guide guide = guideRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + id));
         return mapToResponse(guide);
     }
 
@@ -84,7 +86,7 @@ public class GuideServiceImpl implements GuideService {
     @Transactional
     public GuideResponse updateGuide(Long id, GuideRequest request) {
         Guide guide = guideRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + id));
 
         guide.setTitle(request.getTitle());
         guide.setContent(request.getContent());
@@ -94,8 +96,18 @@ public class GuideServiceImpl implements GuideService {
         guide.setDraft(request.isDraft());
         guide.setUpdatedAt(LocalDateTime.now());
 
-        guide.getImages().clear();
-        if (request.getImages() != null) {
+        // Handle gameId update if present
+        if (request.getGameId() != null) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Game not found with id: " + request.getGameId()));
+            guide.setGame(game);
+        }
+
+        // Handle images update
+        if (guide.getImages() != null) {
+            guide.getImages().clear();
+        }
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<GuideImage> newImages = request.getImages().stream().map(imgReq -> {
                 GuideImage image = new GuideImage();
                 image.setImageUrl(imgReq.getImageUrl());
@@ -111,17 +123,24 @@ public class GuideServiceImpl implements GuideService {
 
     @Override
     public void deleteGuide(Long id) {
+        if (!guideRepository.existsById(id)) {
+            throw new RuntimeException("Guide not found with id: " + id);
+        }
         guideRepository.deleteById(id);
     }
 
     @Override
     public void likeGuide(Long guideId, Long userId) {
         Guide guide = guideRepository.findById(guideId)
-                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Guide not found with id: " + guideId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-        guide.getLikedBy().add(user); // podriamos controlar si ya le dieron like o no
+        if (guide.getLikedBy().contains(user)) {
+            guide.getLikedBy().remove(user); // Unlike if already liked
+        } else {
+            guide.getLikedBy().add(user); // Like if not already liked
+        }
         guideRepository.save(guide);
     }
 
@@ -135,21 +154,25 @@ public class GuideServiceImpl implements GuideService {
 
     @Override
     public List<GuideResponse> getPublishedGuidesByUserId(Long id) {
+        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getDraftsByUserIdAndPublished(Long id, boolean published) {
+        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getPublishedGuidesByUserIdAndDraft(Long id, boolean draft) {
+        // You can implement this method if needed
         return List.of();
     }
 
     @Override
     public List<GuideResponse> getDraftsByUserIdAndPublishedAndDraft(Long id, boolean published, boolean draft) {
+        // You can implement this method if needed
         return List.of();
     }
 
@@ -160,8 +183,7 @@ public class GuideServiceImpl implements GuideService {
                 .toList();
     }
 
-
-    //Mapper interno
+    // Internal mapper
     private GuideResponse mapToResponse(Guide guide) {
         GuideResponse response = new GuideResponse();
         response.setId(guide.getId());
@@ -169,12 +191,15 @@ public class GuideServiceImpl implements GuideService {
         response.setContent(guide.getContent());
         response.setCoverImageUrl(guide.getCoverImageUrl());
         response.setTags(guide.getTags());
-        response.setUserId(guide.getUser().getId());
+        response.setPublished(guide.isPublished());
+        response.setDraft(guide.isDraft());
+        response.setUserId(guide.getUser() != null ? guide.getUser().getId() : null);
         response.setLikeCount(guide.getLikedBy() != null ? guide.getLikedBy().size() : 0);
         response.setCreatedAt(guide.getCreatedAt());
         response.setUpdatedAt(guide.getUpdatedAt());
 
-        if (guide.getImages() != null) {
+        // Map images if present
+        if (guide.getImages() != null && !guide.getImages().isEmpty()) {
             List<GuideImageResponse> images = guide.getImages().stream().map(img -> {
                 GuideImageResponse res = new GuideImageResponse();
                 res.setImageUrl(img.getImageUrl());
@@ -184,13 +209,14 @@ public class GuideServiceImpl implements GuideService {
             response.setImages(images);
         }
 
-        if (guide.getComments() != null) {
+        // Map comments if present
+        if (guide.getComments() != null && !guide.getComments().isEmpty()) {
             List<CommentResponse> comments = guide.getComments().stream().map(comment -> {
                 CommentResponse res = new CommentResponse();
                 res.setId(comment.getId());
                 res.setText(comment.getContent());
-                res.setUserId(comment.getUser().getId());
-                res.setUsername(comment.getUser().getUsername());
+                res.setUserId(comment.getUser() != null ? comment.getUser().getId() : null);
+                res.setUsername(comment.getUser() != null ? comment.getUser().getUsername() : "Unknown");
                 res.setCreatedAt(comment.getCreatedAt());
                 return res;
             }).collect(Collectors.toList());

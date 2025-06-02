@@ -80,10 +80,20 @@ public class SecurityConfig  {
 
                         //guides
                         .requestMatchers("/guides/**").permitAll()
-                        .requestMatchers("/follow/**").authenticated()
 
-                        //news
-                        .requestMatchers("/news/**").permitAll()
+                        //challenges
+                        .requestMatchers("/challenges").permitAll()
+                        .requestMatchers("/challenges/{id}").permitAll()
+                        .requestMatchers("/challenges/game/{gameId}").permitAll()
+                        .requestMatchers("/challenges/{id}/participants").permitAll()
+                        .requestMatchers("/challenges/{id}/average-difficulty").permitAll()
+                        // Protected challenge endpoints (require authentication)
+                        .requestMatchers("/challenges/my-created").authenticated()
+                        .requestMatchers("/challenges/my-participated").authenticated()
+                        .requestMatchers("/challenges/{id}/join").authenticated()
+                        .requestMatchers("/challenges/{id}/complete").authenticated()
+                        .requestMatchers("/challenges/{id}/leave").authenticated()
+                        .requestMatchers("/challenges/{id}/rate-difficulty").authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())

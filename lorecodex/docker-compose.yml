@@ -3,7 +3,7 @@ services:
     image: postgres:15
     container_name: lorecodexdb
     env_file:
-      - src/main/resources/.env
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -15,7 +15,7 @@ services:
     depends_on:
       - db
     env_file:
-      - src/main/resources/.env
+      - .env
     ports:
       - "8080:8080"
       - "5005:5005"
