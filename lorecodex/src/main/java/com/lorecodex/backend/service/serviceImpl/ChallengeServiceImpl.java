@@ -1,140 +1,161 @@
 package com.lorecodex.backend.service.serviceImpl;
 
+import com.lorecodex.backend.dto.request.ChallengeRequest;
+import com.lorecodex.backend.dto.response.challenge.ChallengeProgressDto;
+import com.lorecodex.backend.dto.response.challenge.ChallengeResponse;
+import com.lorecodex.backend.mapper.ChallengeMapper;
 import com.lorecodex.backend.model.Challenge;
-import com.lorecodex.backend.model.Game;
+import com.lorecodex.backend.model.ChallengeItem;
+import com.lorecodex.backend.model.ChallengeParticipation;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.repository.ChallengeParticipationRepository;
 import com.lorecodex.backend.repository.ChallengeRepository;
-import com.lorecodex.backend.repository.ChallengeDifficultyRatingRepository;
+import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.ChallengeService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.IntStream;
 
 @Service
+@Transactional
+@RequiredArgsConstructor
 public class ChallengeServiceImpl implements ChallengeService {
 
     private final ChallengeRepository challengeRepository;
     private final ChallengeParticipationRepository participationRepository;
-    private final ChallengeDifficultyRatingRepository difficultyRatingRepository;
-
-    @Autowired
-    public ChallengeServiceImpl(
-            ChallengeRepository challengeRepository,
-            ChallengeParticipationRepository participationRepository,
-            ChallengeDifficultyRatingRepository difficultyRatingRepository) {
-        this.challengeRepository = challengeRepository;
-        this.participationRepository = participationRepository;
-        this.difficultyRatingRepository = difficultyRatingRepository;
-    }
+    private final UserRepository userRepository;
+    private final ChallengeMapper mapper;
 
     @Override
-    @Transactional
-    public Challenge createChallenge(Challenge challenge) {
-        return challengeRepository.save(challenge);
-    }
+    public void createChallenge(String creatorUsername, ChallengeRequest request) {
+        User creator = userRepository.findByUsername(creatorUsername)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-    @Override
-    public Optional<Challenge> getChallengeById(Long id) {
-        return challengeRepository.findById(id);
-    }
-
-    @Override
-    public List<Challenge> getAllChallenges() {
-        return challengeRepository.findAllOrderByCreatedAtDesc();
-    }
-
-    @Override
-    public List<Challenge> getChallengesByCreator(User creator) {
-        return challengeRepository.findByCreator(creator);
-    }
-
-    @Override
-    public List<Challenge> getChallengesByGame(Game game) {
-        return challengeRepository.findByGame(game);
-    }
-
-    @Override
-    @Transactional
-    public void deleteChallenge(Long id, User requestingUser) throws IllegalAccessException {
-        Optional<Challenge> challengeOpt = getChallengeById(id);
-
-        if (challengeOpt.isEmpty()) {
-            throw new IllegalArgumentException("Challenge not found");
-        }
-
-        Challenge challenge = challengeOpt.get();
-
-        // Check if user has permission to delete this challenge
-        if (!canModify(challenge, requestingUser)) {
-            throw new IllegalAccessException("You don't have permission to delete this challenge");
-        }
-
-        challengeRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    public Challenge updateChallenge(Long id, Challenge updatedChallenge, User requestingUser) throws IllegalAccessException {
-        Optional<Challenge> existingChallengeOpt = getChallengeById(id);
-
-        if (existingChallengeOpt.isEmpty()) {
-            throw new IllegalArgumentException("Challenge not found");
-        }
-
-        Challenge existingChallenge = existingChallengeOpt.get();
-
-        // Check if user has permission to update this challenge
-        if (!canModify(existingChallenge, requestingUser)) {
-            throw new IllegalAccessException("You don't have permission to update this challenge");
-        }
-
-        // Update the fields that are allowed to be modified
-        existingChallenge.setTitle(updatedChallenge.getTitle());
-        existingChallenge.setDescription(updatedChallenge.getDescription());
-
-        return challengeRepository.save(existingChallenge);
-    }
-
-    @Override
-    @Transactional
-    public void updateChallengeStatistics(Long challengeId) {
-        Optional<Challenge> challengeOpt = getChallengeById(challengeId);
-
-        if (challengeOpt.isEmpty()) {
-            return;
-        }
-
-        Challenge challenge = challengeOpt.get();
-
-        // Update participant count
-        Integer participantCount = participationRepository.countByChallengeId(challengeId);
-        challenge.setParticipantCount(participantCount);
-
-        // Update completion count
-        Integer completionCount = participationRepository.countCompletedByChallengeId(challengeId);
-        challenge.setCompletionCount(completionCount);
-
-        // Update average difficulty
-        Integer averageDifficulty = difficultyRatingRepository.findAverageDifficultyByChallengeId(challengeId);
-        challenge.setAverageDifficulty(averageDifficulty != null ? averageDifficulty : 0);
-
-        // Save the updated challenge
+        Challenge challenge = mapper.toEntity(request, creator);
         challengeRepository.save(challenge);
     }
 
     @Override
-    public boolean canModify(Challenge challenge, User user) {
-        // Check if user is the creator of the challenge or has admin role
-        if (challenge.getCreator().getId().equals(user.getId())) {
-            return true;
+    public void joinChallenge(Long challengeId, String username) {
+        if (participationRepository.existsByChallenge_IdAndUser_Username(challengeId, username)) {
+            return; // already joined
+        }
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        ChallengeParticipation participation = ChallengeParticipation.builder()
+                .challenge(challenge)
+                .user(user)
+                .joinedAt(LocalDateTime.now())
+                .build();
+        participationRepository.save(participation);
+    }
+
+    @Override
+    public void completeItem(Long challengeId, Long itemId, String username) {
+        ChallengeParticipation participation = participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+        if (participation == null) {
+            throw new IllegalStateException("User has not joined this challenge");
+        }
+        ChallengeItem item = participation.getChallenge().getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Item not found in this challenge"));
+
+        participation.getCompletedItems().add(item);
+        // quiero chequear si ya completó todos los items del challenge
+        if (participation.getCompletedItems().size() == participation.getChallenge().getItems().size()) {
+            participation.setCompletedAt(LocalDateTime.now());
+            System.out.println("Congrats! Challenge completed by user: " + username + " on " + participation.getCompletedAt());
+        } else {
+            participation.setCompletedAt(null); // reset if not all items completed
+        }
+        // progress recalculated via mapper
+        participationRepository.save(participation);
+        // return mapper.toDto(participation.getChallenge(), participation); chequear
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChallengeResponse getChallenge(Long challengeId, String username) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+        return mapper.toDto(challenge);
+    }
+
+    @Override
+    public ChallengeResponse findById(Long challengeId) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+        return mapper.toDto(challenge);
+    }
+
+    @Override
+    public List<ChallengeResponse> findAllChallenges() {
+        List<Challenge> challenges = challengeRepository.findAll();
+        return challenges.stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, String username) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+
+        if (!challenge.getCreator().getUsername().equals(username)) {
+            throw new IllegalStateException("Only the creator can update the challenge");
         }
 
-        // Check if user has ROLE_ADMIN
-        return user.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        // Update challenge details
+        challenge.setTitle(request.getTitle());
+        challenge.setDescription(request.getDescription());
+
+        // Update items, maintaining order
+        List<ChallengeItem> items = IntStream.range(0, request.getItems().size())
+                .mapToObj(index -> ChallengeItem.builder()
+                        .description(request.getItems().get(index))
+                        .orderPosition(index)
+                        .challenge(challenge)
+                        .build())
+                .toList();
+        challenge.setItems(items);
+        // Save updated challenge
+        challengeRepository.save(challenge);
+        // Return updated challenge response
+        return mapper.toDto(challenge);
     }
+
+    @Override
+    public void deleteChallenge(Long challengeId, String username) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+
+        if (!challenge.getCreator().getUsername().equals(username)) {
+            throw new IllegalStateException("Only the creator can delete the challenge");
+        }
+
+        // Delete all participations related to this challenge
+        participationRepository.deleteById(challengeId);
+        // Delete the challenge itself
+        challengeRepository.delete(challenge);
+    }
+
+    @Override
+    public ChallengeProgressDto getChallengeProgress(Long challengeId, String username) {
+        ChallengeParticipation participation = participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+        if (participation == null) {
+            throw new EntityNotFoundException("User has not joined this challenge");
+        }
+        return mapper.toProgressDto(participation);
+    }
+
 }

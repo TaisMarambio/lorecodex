@@ -1,40 +1,56 @@
 package com.lorecodex.backend.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "challenge_participations", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "challenge_id"})
-})
 public class ChallengeParticipation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "challenge_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "challenge_id")
     private Challenge challenge;
 
-    @Column(name = "joined_at", nullable = false)
-    private LocalDateTime joinedAt;
+    // Items completados por el usuario
+    @ManyToMany
+    @JoinTable(name = "challenge_participation_items",
+            joinColumns = @JoinColumn(name = "participation_id"),
+            inverseJoinColumns = @JoinColumn(name = "item_id"))
+    @Builder.Default
+    private Set<ChallengeItem> completedItems = new HashSet<>();
 
-    @Column(name = "completed")
-    private boolean completed = false;
+    @Column(name = "joined_at", updatable = false)
+    private LocalDateTime joinedAt;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "is_completed")
+    private boolean isCompleted;
+
+    @PrePersist
+    public void onCreate() {
+        this.joinedAt = LocalDateTime.now();
+        this.completedAt = null; // Se establece a null al unirse, se actualizará al completar
+    }
+
 }

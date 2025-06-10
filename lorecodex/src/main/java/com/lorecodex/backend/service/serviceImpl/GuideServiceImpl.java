@@ -8,12 +8,13 @@ import com.lorecodex.backend.notification.event.GuideCreatedEvent;
 import com.lorecodex.backend.notification.event.GuideUpdatedEvent;
 import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.GuideService;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;

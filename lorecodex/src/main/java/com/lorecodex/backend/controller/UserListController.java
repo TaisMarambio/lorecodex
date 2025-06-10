@@ -3,6 +3,7 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
+import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ public class UserListController {
     @GetMapping("/user/{userId}/get-lists")
     public ResponseEntity<List<UserListResponse>> getListsForUser(@PathVariable Long userId) {
         return ResponseEntity.ok(userListService.getListsForUser(userId));
+    }
+
+    @GetMapping("/{listId}/get-all")
+    public ResponseEntity<List<UserListResponse>> getAllLists() {
+        return ResponseEntity.ok(userListService.getAllLists());
     }
 
     @PutMapping("/{listId}/update")

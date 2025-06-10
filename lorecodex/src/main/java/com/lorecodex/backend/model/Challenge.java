@@ -1,81 +1,52 @@
 package com.lorecodex.backend.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "challenges")
 public class Challenge {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 1500)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "creator_id", nullable = false)
+    // Usuario creador del challenge
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
     private User creator;
 
-    @ManyToOne
-    @JoinColumn(name = "game_id", nullable = false)
-    private Game game;
+    // Ítems del checklist
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderPosition ASC")
+    @Builder.Default
+    private List<ChallengeItem> items = new ArrayList<>();
 
-    @Column(name = "created_at", nullable = false)
+    // Participaciones de usuarios
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<ChallengeParticipation> participations = new HashSet<>();
+
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChallengeParticipation> participants = new ArrayList<>();
-
-    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChallengeDifficultyRating> difficultyRatings = new ArrayList<>();
-
-    // Campos calculados que se actualizan cuando se modifican las colecciones relacionadas
-    @Column(name = "participant_count")
-    private Integer participantCount = 0;
-
-    @Column(name = "completion_count")
-    private Integer completionCount = 0;
-
-    @Column(name = "average_difficulty" )
-    private Integer averageDifficulty = 0;
-
-    /*// Método para actualizar contador de participantes
-    public void updateParticipantCount() {
-        this.participantCount = participants.size();
-    }
-
-    // Método para actualizar contador de completados
-    public void updateCompletionCount() {
-        this.completionCount = (int) participants.stream()
-                .filter(ChallengeParticipation::isCompleted)
-                .count();
-    }
-
-    // Método para actualizar dificultad promedio
-    public void updateAverageDifficulty() {
-        if (difficultyRatings.isEmpty()) {
-            this.averageDifficulty = 0.0;
-            return;
-        }
-
-        double sum = difficultyRatings.stream()
-                .mapToInt(ChallengeDifficultyRating::getDifficultyLevel)
-                .sum();
-        this.averageDifficulty = sum / difficultyRatings.size();
-    }*/
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
