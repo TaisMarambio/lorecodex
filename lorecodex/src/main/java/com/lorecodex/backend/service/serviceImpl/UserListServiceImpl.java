@@ -117,6 +117,11 @@ public class UserListServiceImpl implements UserListService {
         listItemRepository.saveAll(items);
     }
 
+    @Override
+    public List<UserListResponse> getAllLists() {
+        return List.of();
+    }
+
     private UserList getUserListByIdOrThrow(Long listId) {
         return userListRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("List not found"));

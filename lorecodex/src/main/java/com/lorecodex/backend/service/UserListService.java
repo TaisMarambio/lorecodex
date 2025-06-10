@@ -22,4 +22,6 @@ public interface UserListService {
     void removeItemFromList(Long listId, Long itemId);
 
     void reorderItems(Long listId, List<ReorderItemRequest> newOrder);
+
+    List<UserListResponse> getAllLists();
 }

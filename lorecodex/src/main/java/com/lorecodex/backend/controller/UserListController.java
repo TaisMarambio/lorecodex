@@ -31,6 +31,11 @@ public class UserListController {
         return ResponseEntity.ok(userListService.getListsForUser(userId));
     }
 
+    @GetMapping("/user/get-all-list")
+    public ResponseEntity<List<UserListResponse>> getAllLists() {
+        return ResponseEntity.ok(userListService.getAllLists());
+    }
+
     @PutMapping("/{listId}/update")
     public ResponseEntity<UserListResponse> updateList(
             @PathVariable Long listId,
