@@ -99,4 +99,10 @@ public class GuideController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    //obtener todos los borradores de un usuario
+    @GetMapping("/user/{id}/drafts")
+    public ResponseEntity<List<GuideResponse>> getDraftsByUserId(@PathVariable Long id) {
+        return ResponseEntity.ok(guideService.getDraftsByUserId(id));
+    }
 }
