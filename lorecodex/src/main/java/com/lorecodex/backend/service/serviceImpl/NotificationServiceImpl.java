@@ -69,4 +69,13 @@ public class NotificationServiceImpl implements NotificationService {
         return List.of();
     }
 
+    @Override
+    public void markAllAsRead(Long userId) {
+        List<Notification> notifications = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId);
+        for (Notification notification : notifications) {
+            notification.setRead(true);
+        }
+        notificationRepository.saveAll(notifications);
+    }
+
 }

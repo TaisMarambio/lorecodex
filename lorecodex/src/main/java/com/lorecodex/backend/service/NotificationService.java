@@ -9,6 +9,7 @@ public interface NotificationService {
     List<NotificationResponse> getNotifications(Long userId);
     void markAsRead(Long notificationId);
     List<Long> getFollowersOfUser(Long userId);
+    void markAllAsRead(Long userId);
 
 }
 
