@@ -2,8 +2,6 @@ package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.dto.request.GuideRequest;
 import com.lorecodex.backend.dto.response.GuideResponse;
-import com.lorecodex.backend.dto.response.GuideImageResponse;
-import com.lorecodex.backend.dto.response.CommentResponse;
 import com.lorecodex.backend.mapper.GuideMapper;
 import com.lorecodex.backend.model.*;
 import com.lorecodex.backend.notification.event.GuideCreatedEvent;
@@ -68,7 +66,9 @@ public class GuideServiceImpl implements GuideService {
         // }
 
         Guide saved = guideRepository.save(guide);
-        eventPublisher.publishEvent(new GuideCreatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        if (guide.isPublished()==true) {
+            eventPublisher.publishEvent(new GuideCreatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        }
         return guideMapper.mapToResponse(saved);
     }
 
@@ -113,7 +113,10 @@ public class GuideServiceImpl implements GuideService {
         }
 
         Guide saved = guideRepository.save(guide);
-        eventPublisher.publishEvent(new GuideUpdatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        // Publicar evento de actualización si la guía está publicada
+        if (saved.isPublished()) {
+            eventPublisher.publishEvent(new GuideUpdatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        }
         return guideMapper.mapToResponse(saved);
     }
 
