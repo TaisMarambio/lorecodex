@@ -4,7 +4,7 @@ import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@Data@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChallengeProgressDto {

@@ -63,11 +63,13 @@ public class ChallengeController {
     }
 
     @PostMapping("/{id}/items/{itemId}/complete")
-    public ChallengeProgressDto completeItem(@PathVariable Long id,
-                                             @PathVariable Long itemId,
-                                             @AuthenticationPrincipal User user) {
-        service.completeItem(id, itemId, user.getUsername());
-        return service.getChallengeProgress(id, user.getUsername());
+    public ResponseEntity<ChallengeProgressDto> completeItem(
+            @PathVariable Long id,
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal User user
+    ) {
+        ChallengeProgressDto dto = service.completeItem(id, itemId, user.getUsername());
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{id}/progress")

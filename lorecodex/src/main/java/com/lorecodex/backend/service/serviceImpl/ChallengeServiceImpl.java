@@ -18,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -59,28 +61,52 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
-    public void completeItem(Long challengeId, Long itemId, String username) {
-        ChallengeParticipation participation = participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+    @Transactional
+    public ChallengeProgressDto completeItem(Long challengeId,
+                                             Long itemId,
+                                             String username) {
+        // 1) Cargo la participación
+        ChallengeParticipation participation = participationRepository
+                .findByChallenge_IdAndUser_Username(challengeId, username);
         if (participation == null) {
             throw new IllegalStateException("User has not joined this challenge");
         }
+
+        // 2) Localizo el ítem dentro del challenge
         ChallengeItem item = participation.getChallenge().getItems().stream()
                 .filter(i -> i.getId().equals(itemId))
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Item not found in this challenge"));
 
-        participation.getCompletedItems().add(item);
-        // quiero chequear si ya completó todos los items del challenge
-        if (participation.getCompletedItems().size() == participation.getChallenge().getItems().size()) {
-            participation.setCompletedAt(LocalDateTime.now());
-            System.out.println("Congrats! Challenge completed by user: " + username + " on " + participation.getCompletedAt());
-        } else {
-            participation.setCompletedAt(null); // reset if not all items completed
+        // 3) Intento añadir al set de completados
+        boolean wasAdded = participation.getCompletedItems().add(item);
+        if (!wasAdded) {
+            // opcional: lanzar excepción o simplemente ignorar si ya estaba
+            // throw new IllegalStateException("Item already completed");
         }
-        // progress recalculated via mapper
-        participationRepository.save(participation);
-        // return mapper.toDto(participation.getChallenge(), participation); chequear
 
+        // 4) Calculo progreso
+        int completed = participation.getCompletedItems().size();
+        int total     = participation.getChallenge().getItems().size();
+        double progress = 100.0 * completed / total;
+
+        // 5) Marco completion timestamp si corresponde
+        if (completed == total) {
+            participation.setCompletedAt(LocalDateTime.now());
+        } else {
+            participation.setCompletedAt(null);
+        }
+
+        // 6) Persisto cambios
+        participationRepository.save(participation);
+
+        // 7) Devuelvo DTO
+        return ChallengeProgressDto.builder()
+                .challengeId(challengeId)
+                .completed(completed)
+                .total(total)
+                .progress(progress)
+                .build();
     }
 
     @Override
@@ -115,22 +141,27 @@ public class ChallengeServiceImpl implements ChallengeService {
             throw new IllegalStateException("Only the creator can update the challenge");
         }
 
-        // Update challenge details
+        // 1) Actualizo título y descripción
         challenge.setTitle(request.getTitle());
         challenge.setDescription(request.getDescription());
 
-        // Update items, maintaining order
-        List<ChallengeItem> items = IntStream.range(0, request.getItems().size())
-                .mapToObj(index -> ChallengeItem.builder()
-                        .description(request.getItems().get(index))
-                        .orderPosition(index)
-                        .challenge(challenge)
-                        .build())
-                .toList();
-        challenge.setItems(items);
-        // Save updated challenge
-        challengeRepository.save(challenge);
-        // Return updated challenge response
+        // 2) Limpio la lista existente (Hibernate entiende el orphanRemoval)
+        challenge.getItems().clear();
+
+        // 3) Creo y agrego los nuevos items, manteniendo orden (1-based)
+        for (int i = 0; i < request.getItems().size(); i++) {
+            ChallengeItem it = ChallengeItem.builder()
+                    .description(request.getItems().get(i))
+                    .orderPosition(i + 1)
+                    .challenge(challenge)
+                    .build();
+            challenge.getItems().add(it);
+        }
+
+        // 4) Guardo (Merge implícito por @Transactional)
+        //    No necesitas usar save() si estás dentro de una transacción y challenge ya está gestionada.
+        //challengeRepository.save(challenge);
+
         return mapper.toDto(challenge);
     }
 

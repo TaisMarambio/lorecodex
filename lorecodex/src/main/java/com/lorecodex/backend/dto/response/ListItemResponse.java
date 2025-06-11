@@ -9,4 +9,8 @@ public class ListItemResponse {
     private ListItemType type;
     private Long referenceId;
     private int position;
+
+    //para poder mostrar en el front
+    private String title;
+    private String thumbnailUrl;
 }

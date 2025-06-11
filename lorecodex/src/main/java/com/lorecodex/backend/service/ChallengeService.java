@@ -12,7 +12,7 @@ public interface ChallengeService {
 
     void joinChallenge(Long challengeId, String username);
 
-    void completeItem(Long challengeId, Long itemId, String username);
+    ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username);
 
     ChallengeResponse getChallenge(Long challengeId, String username);
 
