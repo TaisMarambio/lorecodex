@@ -86,18 +86,8 @@ public class SecurityConfig  {
                         .requestMatchers("/follow/**").authenticated()
 
                         //challenges
-                        .requestMatchers("/challenges").permitAll()
-                        .requestMatchers("/challenges/{id}").permitAll()
-                        .requestMatchers("/challenges/game/{gameId}").permitAll()
-                        .requestMatchers("/challenges/{id}/participants").permitAll()
-                        .requestMatchers("/challenges/{id}/average-difficulty").permitAll()
-                        // Protected challenge endpoints (require authentication)
-                        .requestMatchers("/challenges/my-created").authenticated()
-                        .requestMatchers("/challenges/my-participated").authenticated()
-                        .requestMatchers("/challenges/{id}/join").authenticated()
-                        .requestMatchers("/challenges/{id}/complete").authenticated()
-                        .requestMatchers("/challenges/{id}/leave").authenticated()
-                        .requestMatchers("/challenges/{id}/rate-difficulty").authenticated()
+                        .requestMatchers("/challenges/**").permitAll()
+
                         //news
                         .requestMatchers("/news/**").permitAll()
 

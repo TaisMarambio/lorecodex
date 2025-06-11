@@ -8,11 +8,12 @@ import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.repository.NewsRepository;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.NewsService;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;

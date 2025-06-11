@@ -7,10 +7,10 @@ import com.lorecodex.backend.notification.event.FollowedUserEvent;
 import com.lorecodex.backend.repository.FollowRepository;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.FollowService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;

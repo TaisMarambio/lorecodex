@@ -8,9 +8,7 @@ import com.lorecodex.backend.dto.response.UserListResponse;
 import com.lorecodex.backend.model.ListItem;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserList;
-import com.lorecodex.backend.repository.ListItemRepository;
-import com.lorecodex.backend.repository.UserListRepository;
-import com.lorecodex.backend.repository.UserRepository;
+import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +27,10 @@ public class UserListServiceImpl implements UserListService {
     private final UserListRepository userListRepository;
     private final ListItemRepository listItemRepository;
     private final UserRepository userRepository;
+
+    private final GameRepository gameRepository;
+    private final GuideRepository guideRepository;
+    private final ChallengeRepository challengeRepository;
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
@@ -118,8 +120,20 @@ public class UserListServiceImpl implements UserListService {
     }
 
     @Override
+    public UserListResponse getListById(Long listId) {
+        UserList list = getUserListByIdOrThrow(listId);
+        return toResponse(list);
+    }
+
+    @Override
     public List<UserListResponse> getAllLists() {
-        return List.of();
+        List<UserList> lists = userListRepository.findAll();
+        if (lists.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return lists.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     private UserList getUserListByIdOrThrow(Long listId) {
@@ -128,28 +142,49 @@ public class UserListServiceImpl implements UserListService {
     }
 
     private UserListResponse toResponse(UserList list) {
+        List<ListItemResponse> itemDtos = list.getItems().stream()
+                .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
+                .map(this::toItemResponse)
+                .collect(Collectors.toList());
+
         return UserListResponse.builder()
                 .id(list.getId())
                 .title(list.getTitle())
                 .description(list.getDescription())
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
-                .items(
-                        list.getItems().stream()
-                                .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
-                                .map(this::toItemResponse)
-                                .collect(Collectors.toList())
-                )
-
+                .items(itemDtos)
                 .build();
     }
 
     private ListItemResponse toItemResponse(ListItem item) {
-        ListItemResponse res = new ListItemResponse();
-        res.setId(item.getId());
-        res.setReferenceId(item.getReferenceId());
-        res.setType(item.getType());
-        res.setPosition(item.getPosition());
-        return res;
+        ListItemResponse dto = new ListItemResponse();
+        dto.setId(item.getId());
+        dto.setType(item.getType());
+        dto.setReferenceId(item.getReferenceId());
+        dto.setPosition(item.getPosition());
+
+        // Cargamos y enriquecemos según tipo
+        switch (item.getType()) {
+            case GAME -> {
+                gameRepository.findById(item.getReferenceId()).ifPresent(g -> {
+                    dto.setTitle(g.getTitle());
+                    dto.setThumbnailUrl(g.getCoverImage());
+                });
+            }
+            case GUIDE -> {
+                guideRepository.findById(item.getReferenceId()).ifPresent(gu -> {
+                    dto.setTitle(gu.getTitle());
+                    dto.setThumbnailUrl(gu.getCoverImageUrl());
+                });
+            }
+            case CHALLENGE -> {
+                challengeRepository.findById(item.getReferenceId()).ifPresent(ch -> {
+                    dto.setTitle(ch.getTitle());
+                    // si tienes alguna imagen para challenges, úsala; si no, puedes dejar null
+                });
+            }
+        }
+        return dto;
     }
 }

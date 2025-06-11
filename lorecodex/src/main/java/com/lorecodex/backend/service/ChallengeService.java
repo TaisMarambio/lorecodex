@@ -1,28 +1,29 @@
 package com.lorecodex.backend.service;
 
-import com.lorecodex.backend.model.Challenge;
-import com.lorecodex.backend.model.Game;
-import com.lorecodex.backend.model.User;
+import com.lorecodex.backend.dto.request.ChallengeRequest;
+import com.lorecodex.backend.dto.response.challenge.ChallengeProgressDto;
+import com.lorecodex.backend.dto.response.challenge.ChallengeResponse;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ChallengeService {
-    Challenge createChallenge(Challenge challenge);
 
-    Optional<Challenge> getChallengeById(Long id);
+    void createChallenge(String creatorUsername, ChallengeRequest request);
 
-    List<Challenge> getAllChallenges();
+    void joinChallenge(Long challengeId, String username);
 
-    List<Challenge> getChallengesByCreator(User creator);
+    ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username);
 
-    List<Challenge> getChallengesByGame(Game game);
+    ChallengeResponse getChallenge(Long challengeId, String username);
 
-    void deleteChallenge(Long id, User requestingUser) throws IllegalAccessException;
+    ChallengeResponse findById(Long challengeId);
 
-    Challenge updateChallenge(Long id, Challenge challenge, User requestingUser) throws IllegalAccessException;
+    List<ChallengeResponse> findAllChallenges();
 
-    void updateChallengeStatistics(Long challengeId);
+    ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, String username);
 
-    boolean canModify(Challenge challenge, User user);
+    void deleteChallenge(Long challengeId, String username);
+
+    ChallengeProgressDto getChallengeProgress(Long challengeId, String username);
+
 }
