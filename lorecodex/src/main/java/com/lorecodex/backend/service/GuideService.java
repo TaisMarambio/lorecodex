@@ -24,5 +24,7 @@ public interface GuideService {
     String uploadCoverImage(Long guideId, MultipartFile file);
     Optional<GuideResponse> publishGuide(Long id);
     Optional<GuideResponse> unpublishGuide(Long id);
+    String getAuthorNameByGuideId(Long guideId);
+    List<GuideResponse> getPublishedGuidesByTitle(String title);
 
 }

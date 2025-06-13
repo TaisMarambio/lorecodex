@@ -77,4 +77,11 @@ public class ChallengeController {
                                             @AuthenticationPrincipal User user) {
         return service.getChallengeProgress(id, user.getUsername());
     }
+
+    //obtener challenges por titulo
+    @GetMapping("/search")
+    public ResponseEntity<List<ChallengeResponse>> searchChallenges(@RequestParam String title) {
+        List<ChallengeResponse> challenges = service.findChallengesByTitle(title);
+        return ResponseEntity.ok(challenges);
+    }
 }

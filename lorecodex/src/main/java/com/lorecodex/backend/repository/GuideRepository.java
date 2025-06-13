@@ -13,6 +13,6 @@ public interface GuideRepository extends JpaRepository<Guide, Long> {
     // List<Guide> findByUserId(Integer userId);
     List<Guide> findByUserIdAndIsDraftTrue(Long userId);
     List<Guide> findByIsPublishedTrue();
-
+    List<Guide> findByTitleContainingIgnoreCaseAndIsPublishedTrue(String title);
 
 }

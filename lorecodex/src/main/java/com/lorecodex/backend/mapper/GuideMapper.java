@@ -21,6 +21,8 @@ public class GuideMapper {
         response.setCreatedAt(guide.getCreatedAt());
         response.setUpdatedAt(guide.getUpdatedAt());
         response.setPublished(guide.isPublished());
+        response.setAuthorId(guide.getUser().getId());
+        response.setAuthorUsername(guide.getUser().getUsername());
         response.setDraft(guide.isDraft());
 
         if (guide.getImages() != null) {

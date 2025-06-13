@@ -3,8 +3,8 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
-import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
+import com.lorecodex.backend.mapper.UserListMapper;
 import com.lorecodex.backend.model.ListItem;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserList;
@@ -14,10 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class UserListServiceImpl implements UserListService {
     private final GameRepository gameRepository;
     private final GuideRepository guideRepository;
     private final ChallengeRepository challengeRepository;
+    private final UserListMapper userListMapper;
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
@@ -41,150 +41,164 @@ public class UserListServiceImpl implements UserListService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .user(user)
+                .items(request.getItems().stream()
+                        .map(itemRequest -> ListItem.builder()
+                                .type(itemRequest.getType())
+                                .referenceId(itemRequest.getReferenceId())
+                                .position(itemRequest.getPosition())
+                                .build())
+                        .toList())
                 .build();
 
+        userList.setCreatedAt(LocalDateTime.now());
+        userList.setUpdatedAt(LocalDateTime.now());
         userList = userListRepository.save(userList);
-        return toResponse(userList);
+        return userListMapper.toResponse(userList);
     }
 
     @Override
     public List<UserListResponse> getListsForUser(Long userId) {
-        return userListRepository.findByUserId(userId).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserList> lists = userListRepository.findByUserId(user.getId());
+        return lists.stream()
+                .map(userListMapper::toResponse)
+                .toList();
+
     }
 
     @Override
     public UserListResponse updateList(Long listId, UserListRequest request) {
-        UserList list = getUserListByIdOrThrow(listId);
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
 
-        list.setTitle(request.getTitle());
-        list.setDescription(request.getDescription());
+        userList.setTitle(request.getTitle());
+        userList.setDescription(request.getDescription());
+        userList.setUpdatedAt(LocalDateTime.now());
 
-        return toResponse(userListRepository.save(list));
+        // Actualizar items si es necesario
+        if (request.getItems() != null) {
+            List<ListItem> updatedItems = request.getItems().stream()
+                    .map(itemRequest -> ListItem.builder()
+                            .type(itemRequest.getType())
+                            .referenceId(itemRequest.getReferenceId())
+                            .position(itemRequest.getPosition())
+                            .build())
+                    .toList();
+            userList.setItems(updatedItems);
+        }
+
+        userList = userListRepository.save(userList);
+        return userListMapper.toResponse(userList);
     }
 
     @Override
     public void deleteList(Long listId) {
-        UserList list = getUserListByIdOrThrow(listId);
-        userListRepository.delete(list);
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
+
+        // Eliminar todos los items asociados a la lista
+        listItemRepository.deleteAll(userList.getItems());
+
+        // Eliminar la lista
+        userListRepository.delete(userList);
     }
 
     @Override
     public void addItemToList(Long listId, ListItemRequest request) {
-        UserList list = getUserListByIdOrThrow(listId);
-
-        boolean alreadyExists = list.getItems().stream()
-                .anyMatch(item -> item.getReferenceId().equals(request.getReferenceId())
-                        && item.getType() == request.getType());
-
-        if (alreadyExists) {
-            throw new RuntimeException("Item already in the list");
-        }
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
 
         ListItem item = ListItem.builder()
                 .type(request.getType())
                 .referenceId(request.getReferenceId())
                 .position(request.getPosition())
-                .userList(list)
+                .userList(userList)
                 .build();
 
+        // Asignar la lista al item
+        item.setUserList(userList);
         listItemRepository.save(item);
+
+        // Actualizar la lista con el nuevo item
+        userList.getItems().add(item);
+        userListRepository.save(userList);
     }
 
     @Override
     public void removeItemFromList(Long listId, Long itemId) {
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
+
         ListItem item = listItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
+        // Verificar que el item pertenece a la lista
         if (!item.getUserList().getId().equals(listId)) {
-            throw new RuntimeException("Item does not belong to the list");
+            throw new RuntimeException("Item does not belong to the specified list");
         }
 
+        // Eliminar el item de la lista y del repositorio
+        userList.getItems().remove(item);
         listItemRepository.delete(item);
     }
 
     @Override
     public void reorderItems(Long listId, List<ReorderItemRequest> newOrder) {
-        List<ListItem> items = listItemRepository.findByUserListIdOrderByPositionAsc(listId);
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
 
-        for (ReorderItemRequest order : newOrder) {
-            Optional<ListItem> itemOpt = items.stream()
-                    .filter(i -> i.getId().equals(order.getItemId()))
+        // Verificar que todos los items existen en la lista
+        for (ReorderItemRequest request : newOrder) {
+            Optional<ListItem> itemOpt = userList.getItems().stream()
+                    .filter(item -> item.getId().equals(request.getItemId()))
                     .findFirst();
-
-            itemOpt.ifPresent(item -> item.setPosition(order.getNewPosition()));
+            if (itemOpt.isEmpty()) {
+                throw new RuntimeException("Item with ID " + request.getItemId() + " not found in the list");
+            }
         }
 
-        listItemRepository.saveAll(items);
+        // Reordenar los items
+        for (int i = 0; i < newOrder.size(); i++) {
+            final int index = i;
+            ListItem item = userList.getItems().stream()
+                    .filter(it -> it.getId().equals(newOrder.get(index).getItemId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Item not found in the list"));
+            item.setPosition(i);
+        }
+
+        // Guardar los cambios
+        listItemRepository.saveAll(userList.getItems());
     }
 
     @Override
     public UserListResponse getListById(Long listId) {
-        UserList list = getUserListByIdOrThrow(listId);
-        return toResponse(list);
+        UserList userList = userListRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
+
+        return userListMapper.toResponse(userList);
     }
 
     @Override
     public List<UserListResponse> getAllLists() {
-        List<UserList> lists = userListRepository.findAll();
-        if (lists.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return lists.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        List<UserList> allLists = userListRepository.findAll();
+        return allLists.stream()
+                .map(userListMapper::toResponse)
+                .toList();
     }
 
-    private UserList getUserListByIdOrThrow(Long listId) {
-        return userListRepository.findById(listId)
+    @Override
+    public String getAuthorNameByListId(Long listId) {
+        UserList userList = userListRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("List not found"));
-    }
 
-    private UserListResponse toResponse(UserList list) {
-        List<ListItemResponse> itemDtos = list.getItems().stream()
-                .sorted((a, b) -> Integer.compare(a.getPosition(), b.getPosition()))
-                .map(this::toItemResponse)
-                .collect(Collectors.toList());
-
-        return UserListResponse.builder()
-                .id(list.getId())
-                .title(list.getTitle())
-                .description(list.getDescription())
-                .createdAt(list.getCreatedAt())
-                .userId(list.getUser().getId())
-                .items(itemDtos)
-                .build();
-    }
-
-    private ListItemResponse toItemResponse(ListItem item) {
-        ListItemResponse dto = new ListItemResponse();
-        dto.setId(item.getId());
-        dto.setType(item.getType());
-        dto.setReferenceId(item.getReferenceId());
-        dto.setPosition(item.getPosition());
-
-        // Cargamos y enriquecemos según tipo
-        switch (item.getType()) {
-            case GAME -> {
-                gameRepository.findById(item.getReferenceId()).ifPresent(g -> {
-                    dto.setTitle(g.getTitle());
-                    dto.setThumbnailUrl(g.getCoverImage());
-                });
-            }
-            case GUIDE -> {
-                guideRepository.findById(item.getReferenceId()).ifPresent(gu -> {
-                    dto.setTitle(gu.getTitle());
-                    dto.setThumbnailUrl(gu.getCoverImageUrl());
-                });
-            }
-            case CHALLENGE -> {
-                challengeRepository.findById(item.getReferenceId()).ifPresent(ch -> {
-                    dto.setTitle(ch.getTitle());
-                    // si tienes alguna imagen para challenges, úsala; si no, puedes dejar null
-                });
-            }
+        User user = userList.getUser();
+        if (user != null) {
+            return user.getUsername(); // Asumiendo que User tiene un campo username
+        } else {
+            throw new RuntimeException("User not found for the list");
         }
-        return dto;
     }
 }

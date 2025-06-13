@@ -189,4 +189,12 @@ public class ChallengeServiceImpl implements ChallengeService {
         return mapper.toProgressDto(participation);
     }
 
+    @Override
+    public List<ChallengeResponse> findChallengesByTitle(String title) {
+        List<Challenge> challenges = challengeRepository.findByTitleContainingIgnoreCase(title);
+        return challenges.stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

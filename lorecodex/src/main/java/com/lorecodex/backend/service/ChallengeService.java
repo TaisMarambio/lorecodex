@@ -26,4 +26,7 @@ public interface ChallengeService {
 
     ChallengeProgressDto getChallengeProgress(Long challengeId, String username);
 
+    //quiero buscar challenges por titulo
+    List<ChallengeResponse> findChallengesByTitle(String title);
+
 }

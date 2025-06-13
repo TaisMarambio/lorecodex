@@ -210,4 +210,19 @@ public class GuideServiceImpl implements GuideService {
         Guide savedGuide = guideRepository.save(guide);
         return Optional.of(guideMapper.mapToResponse(savedGuide));
     }
+
+    @Override
+    public String getAuthorNameByGuideId(Long guideId) {
+        Guide guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        return guide.getUser().getUsername();
+    }
+
+    @Override
+    public List<GuideResponse> getPublishedGuidesByTitle(String title) {
+        List<Guide> guides = guideRepository.findByTitleContainingIgnoreCaseAndIsPublishedTrue(title);
+        return guides.stream()
+                .map(guideMapper::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }

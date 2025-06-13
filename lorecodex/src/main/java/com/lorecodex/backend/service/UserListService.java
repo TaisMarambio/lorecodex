@@ -27,4 +27,6 @@ public interface UserListService {
     UserListResponse getListById(Long listId);
 
     List<UserListResponse> getAllLists();
+
+    String getAuthorNameByListId(Long listId);
 }

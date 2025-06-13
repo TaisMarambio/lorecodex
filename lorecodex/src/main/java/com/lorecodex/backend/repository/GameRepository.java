@@ -1,6 +1,5 @@
 package com.lorecodex.backend.repository;
 
-import com.lorecodex.backend.dto.response.igdb.CreateGameFromIgdbRequest;
 import com.lorecodex.backend.model.Game;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

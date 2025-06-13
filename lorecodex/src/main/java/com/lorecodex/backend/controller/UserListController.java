@@ -3,7 +3,6 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
-import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +26,7 @@ public class UserListController {
         return ResponseEntity.ok(userListService.createList(userId, request));
     }
 
+    //get listas de un usuario por su id
     @GetMapping("/user/{userId}/get-lists")
     public ResponseEntity<List<UserListResponse>> getListsForUser(@PathVariable Long userId) {
         return ResponseEntity.ok(userListService.getListsForUser(userId));
@@ -76,5 +76,22 @@ public class UserListController {
     ) {
         userListService.reorderItems(listId, request);
         return ResponseEntity.ok().build();
+    }
+
+    //get a una lista por su id
+    @GetMapping("/{listId}/get-list")
+    public ResponseEntity<UserListResponse> getListById(@PathVariable Long listId) {
+        return ResponseEntity.ok(userListService.getListById(listId));
+    }
+
+    //voy a obtener el username del usuario que creó la lista
+    @GetMapping("/{listId}/author")
+    public ResponseEntity<String> getListAuthor(@PathVariable Long listId) {
+        String author = userListService.getAuthorNameByListId(listId);
+        if (author != null) {
+            return ResponseEntity.ok(author);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

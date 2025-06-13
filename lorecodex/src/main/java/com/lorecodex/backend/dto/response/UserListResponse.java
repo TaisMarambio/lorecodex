@@ -14,5 +14,6 @@ public class UserListResponse {
     private String description;
     private LocalDateTime createdAt;
     private Long userId;
+    private String username;
     private List<ListItemResponse> items;
 }

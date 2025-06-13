@@ -105,4 +105,22 @@ public class GuideController {
     public ResponseEntity<List<GuideResponse>> getDraftsByUserId(@PathVariable Long id) {
         return ResponseEntity.ok(guideService.getDraftsByUserId(id));
     }
+
+    //quiero obtener el autor de una guia específica
+    @GetMapping("/{id}/author")
+    public ResponseEntity<String> getGuideAuthor(@PathVariable Long id) {
+        String author = guideService.getAuthorNameByGuideId(id);
+        if (author != null) {
+            return ResponseEntity.ok(author);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // buscar guías por título
+    @GetMapping("/search")
+    public ResponseEntity<List<GuideResponse>> searchGuidesByTitle(@RequestParam String title) {
+        List<GuideResponse> guides = guideService.getPublishedGuidesByTitle(title);
+        return ResponseEntity.ok(guides);
+    }
 }

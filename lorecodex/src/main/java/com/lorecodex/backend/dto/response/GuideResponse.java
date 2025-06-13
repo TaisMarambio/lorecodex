@@ -20,7 +20,8 @@ public class GuideResponse {
     private boolean isPublished;
     private boolean isDraft;
     private Set<String> tags;
-    private Long userId;
+    private Long authorId;
+    private String authorUsername;
     private Long gameId; // Add this field
     private int likeCount;
     private List<CommentResponse> comments;
