@@ -1,10 +1,12 @@
 package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.response.GuideResponse;
+import com.lorecodex.backend.dto.response.UserProfileResponse;
 import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.mapper.UserMapper;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.GuideService;
+import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,11 +19,13 @@ import java.util.List;
 public class UserController {
     private final UserMapper userMapper;
     private final GuideService guideService;
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserMapper userMapper, GuideService guideService) {
+    public UserController(UserMapper userMapper, GuideService guideService, UserService userService) {
         this.userMapper = userMapper;
         this.guideService = guideService;
+        this.userService = userService;
     }
 
     @GetMapping("/me")
@@ -40,4 +44,15 @@ public class UserController {
         List<GuideResponse> drafts = guideService.getDraftsByUserId(user.getId());
         return ResponseEntity.ok(drafts);
     }
+
+    //ver el perfil de un usuario por su id
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<UserProfileResponse> getUserProfileById(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(userService.getUserProfileById(userId, currentUser.getId()));
+    }
+
+
 }

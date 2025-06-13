@@ -1,5 +1,6 @@
 package com.lorecodex.backend.service;
 
+import com.lorecodex.backend.dto.response.UserProfileResponse;
 import com.lorecodex.backend.model.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,5 +20,5 @@ public interface UserService extends UserDetailsService {
     User updateUser(Long id, User user);
     void deleteUser(Long id);
     List<User> getAllUsers();
-
+    UserProfileResponse getUserProfileById(Long userId, Long currentUserId);
 }
