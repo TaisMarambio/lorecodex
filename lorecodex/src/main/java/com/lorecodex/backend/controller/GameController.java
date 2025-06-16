@@ -92,4 +92,11 @@ public class GameController {
         Game likedGame = gameService.incrementLikes(id);
         return ResponseEntity.ok(gameMapper.toDTO(likedGame));
     }
+
+    //buscar juego por nombre
+    @GetMapping("/search")
+    public ResponseEntity<List<GameDetailResponse>> searchGamesByTitle(@RequestParam String title) {
+        List<Game> games = gameService.findGamesByTitle(title);
+        return ResponseEntity.ok(gameMapper.toDTOList(games));
+    }
 }

@@ -32,7 +32,7 @@ public class UserListController {
         return ResponseEntity.ok(userListService.getListsForUser(userId));
     }
 
-    @GetMapping("/{listId}/get-all")
+    @GetMapping("/get-all")
     public ResponseEntity<List<UserListResponse>> getAllLists() {
         return ResponseEntity.ok(userListService.getAllLists());
     }

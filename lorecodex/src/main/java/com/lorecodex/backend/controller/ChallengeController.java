@@ -42,6 +42,7 @@ public class ChallengeController {
         service.deleteChallenge(id, user.getUsername());
     }
 
+    //obtiene un challenge por id
     @GetMapping("/{id}")
     public ChallengeResponse get(@PathVariable Long id) {
         return service.findById(id);
@@ -62,6 +63,7 @@ public class ChallengeController {
         service.joinChallenge(id, user.getUsername());
     }
 
+    //completar un item de un challenge
     @PostMapping("/{id}/items/{itemId}/complete")
     public ResponseEntity<ChallengeProgressDto> completeItem(
             @PathVariable Long id,

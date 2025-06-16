@@ -30,10 +30,9 @@ public class GameMapper {
     }
 
     public List<GameDetailResponse> toDTOList(List<Game> games) {
-        if (games == null) {
+        if (games == null || games.isEmpty()) {
             return List.of();
         }
-
         return games.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -68,8 +69,10 @@ public class UserListServiceImpl implements UserListService {
 
     }
 
+    @Transactional
     @Override
     public UserListResponse updateList(Long listId, UserListRequest request) {
+
         UserList userList = userListRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("List not found"));
 
@@ -77,21 +80,48 @@ public class UserListServiceImpl implements UserListService {
         userList.setDescription(request.getDescription());
         userList.setUpdatedAt(LocalDateTime.now());
 
-        // Actualizar items si es necesario
+        // ----- actualizar ítems -------
         if (request.getItems() != null) {
-            List<ListItem> updatedItems = request.getItems().stream()
-                    .map(itemRequest -> ListItem.builder()
-                            .type(itemRequest.getType())
-                            .referenceId(itemRequest.getReferenceId())
-                            .position(itemRequest.getPosition())
-                            .build())
+
+            // 1) vaciar la colección EXISTENTE
+            userList.getItems().clear();
+
+            // 2) mapear los DTO -> entidades
+            List<ListItem> newItems = request.getItems().stream()
+                    .map(dto -> {
+                        ListItem li = ListItem.builder()
+                                .type(dto.getType())
+                                .referenceId(dto.getReferenceId())
+                                .position(dto.getPosition())
+                                .build();
+                        li.setUserList(userList);       // ← clave para la FK
+                        return li;
+                    })
                     .toList();
-            userList.setItems(updatedItems);
+
+            // 3) añadir uno a uno (misma instancia de List)
+            userList.getItems().addAll(newItems);
         }
 
-        userList = userListRepository.save(userList);
-        return userListMapper.toResponse(userList);
+        // al tener cascade + orphanRemoval, sólo hace falta guardar ‘userList’
+        return userListMapper.toResponse(userListRepository.save(userList));
     }
+
+
+    // ---o bien---
+
+        // ②  Si prefieres vaciar y rellenar la existente:
+    /*
+    List<ListItem> target = userList.getItems(); // colección gestionada
+    target.clear();
+    request.getItems().forEach(dto -> target.add(
+        ListItem.builder()
+            .type(dto.getType())
+            .referenceId(dto.getReferenceId())
+            .position(dto.getPosition())
+            .build()
+    ));
+    */
 
     @Override
     public void deleteList(Long listId) {
