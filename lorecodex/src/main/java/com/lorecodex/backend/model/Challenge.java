@@ -49,4 +49,8 @@ public class Challenge {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    //quiero que tengan dificultad del tipo: facil, medio, difcil, etc
+    @Enumerated(EnumType.STRING)
+    private ChallengeDifficulty difficulty;
 }

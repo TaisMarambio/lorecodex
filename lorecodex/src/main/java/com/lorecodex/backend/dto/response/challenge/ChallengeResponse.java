@@ -14,6 +14,8 @@ public class ChallengeResponse {
     private Long id;
     private String title;
     private String description;
+    private String difficulty;
     private String creatorUsername;
+    private Long creatorId; // Nuevo campo
     private List<ChallengeItemDto> items;
 }

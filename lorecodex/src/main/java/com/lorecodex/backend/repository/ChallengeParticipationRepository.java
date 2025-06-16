@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface ChallengeParticipationRepository extends JpaRepository<ChallengeParticipation, Long> {
     boolean existsByChallenge_IdAndUser_Username(Long challengeId, String username);
     ChallengeParticipation findByChallenge_IdAndUser_Username(Long challengeId, String username);
+    ChallengeParticipation findByChallenge_IdAndUser_Id(Long challengeId, Long userId);
 }

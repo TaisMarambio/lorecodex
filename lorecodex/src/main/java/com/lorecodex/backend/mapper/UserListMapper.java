@@ -40,6 +40,7 @@ public class UserListMapper {
                 .description(list.getDescription())
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
+                .username(list.getUser().getUsername())
                 .items(itemDtos)
                 .build();
     }

@@ -12,7 +12,9 @@ import com.lorecodex.backend.repository.ChallengeParticipationRepository;
 import com.lorecodex.backend.repository.ChallengeRepository;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.ChallengeService;
+import com.lorecodex.backend.model.ChallengeDifficulty;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.HashSet;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,29 +36,58 @@ public class ChallengeServiceImpl implements ChallengeService {
     private final ChallengeMapper mapper;
 
     @Override
-    public void createChallenge(String creatorUsername, ChallengeRequest request) {
+    public ChallengeResponse createChallenge(String creatorUsername, ChallengeRequest request) {
         User creator = userRepository.findByUsername(creatorUsername)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
-        Challenge challenge = mapper.toEntity(request, creator);
-        challengeRepository.save(challenge);
+        // Convertir el número de dificultad al enum
+        int difficultyLevel = Integer.parseInt(request.getDifficulty());
+        ChallengeDifficulty difficulty = ChallengeDifficulty.fromLevel(difficultyLevel);
+
+        // Crear el challenge
+        Challenge challenge = Challenge.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .creator(creator)
+                .difficulty(difficulty) // Asignar la dificultad convertida
+                .items(new ArrayList<>())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // Agregar los ítems al challenge
+        IntStream.range(0, request.getItems().size()).forEach(i -> {
+            ChallengeItem item = ChallengeItem.builder()
+                    .description(request.getItems().get(i))
+                    .orderPosition(i + 1) // Índice basado en 1
+                    .challenge(challenge)
+                    .build();
+            challenge.getItems().add(item);
+        });
+
+        // Guardar el challenge
+        Challenge savedChallenge = challengeRepository.save(challenge);
+        return mapper.toDto(savedChallenge);
     }
 
     @Override
     public void joinChallenge(Long challengeId, String username) {
         if (participationRepository.existsByChallenge_IdAndUser_Username(challengeId, username)) {
-            return; // already joined
+            return; // Ya unido
         }
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge no encontrado"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        // Crear una nueva participación con ítems completados vacíos
         ChallengeParticipation participation = ChallengeParticipation.builder()
                 .challenge(challenge)
                 .user(user)
+                .completedItems(new HashSet<>()) // Inicializar vacío
                 .joinedAt(LocalDateTime.now())
                 .build();
+
         participationRepository.save(participation);
     }
 
@@ -65,48 +96,40 @@ public class ChallengeServiceImpl implements ChallengeService {
     public ChallengeProgressDto completeItem(Long challengeId,
                                              Long itemId,
                                              String username) {
-        // 1) Cargo la participación
-        ChallengeParticipation participation = participationRepository
-                .findByChallenge_IdAndUser_Username(challengeId, username);
+
+        // 1) Cargar la participación del usuario en el challenge
+        ChallengeParticipation participation =
+                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+
         if (participation == null) {
             throw new IllegalStateException("User has not joined this challenge");
         }
 
-        // 2) Localizo el ítem dentro del challenge
-        ChallengeItem item = participation.getChallenge().getItems().stream()
+        // 2) Localizar el ítem dentro del challenge
+        ChallengeItem item = participation.getChallenge()
+                .getItems()
+                .stream()
                 .filter(i -> i.getId().equals(itemId))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Item not found in this challenge"));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Item not found in this challenge"));
 
-        // 3) Intento añadir al set de completados
-        boolean wasAdded = participation.getCompletedItems().add(item);
-        if (!wasAdded) {
-            // opcional: lanzar excepción o simplemente ignorar si ya estaba
-            // throw new IllegalStateException("Item already completed");
-        }
+        // 3) Añadirlo al set de completados
+        participation.getCompletedItems().add(item);
 
-        // 4) Calculo progreso
-        int completed = participation.getCompletedItems().size();
-        int total     = participation.getChallenge().getItems().size();
-        double progress = 100.0 * completed / total;
-
-        // 5) Marco completion timestamp si corresponde
-        if (completed == total) {
+        // 4) Actualizar timestamp de completado
+        if (participation.getCompletedItems().size() ==
+                participation.getChallenge().getItems().size()) {
             participation.setCompletedAt(LocalDateTime.now());
         } else {
             participation.setCompletedAt(null);
         }
 
-        // 6) Persisto cambios
+        // 5) Persistir cambios
         participationRepository.save(participation);
 
-        // 7) Devuelvo DTO
-        return ChallengeProgressDto.builder()
-                .challengeId(challengeId)
-                .completed(completed)
-                .total(total)
-                .progress(progress)
-                .build();
+        // 6) → Construir DTO con el *mapper*
+        return mapper.toProgressDto(participation);
     }
 
     @Override
@@ -197,4 +220,58 @@ public class ChallengeServiceImpl implements ChallengeService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void leaveChallenge(Long challengeId, Long userId) {
+        ChallengeParticipation participation = participationRepository
+                .findByChallenge_IdAndUser_Id(challengeId, userId);
+        if (participation != null) {
+            participationRepository.delete(participation);
+        } else {
+            throw new EntityNotFoundException("Participation not found");
+        }
+    }
+
+    @Override
+    public String getChallengeDifficulty(Long challengeId) {
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
+
+        // Aquí puedes implementar la lógica para determinar la dificultad del challenge
+        // Por ejemplo, podrías basarte en el número de ítems o en algún otro criterio
+        //la dificultad la determina el creador del challenge
+        return challenge.getDifficulty() != null ? challenge.getDifficulty().name() : "UNKNOWN";
+    }
+
+    /** Des-marca (un-complete) un item */
+    @Override
+    @Transactional
+    public ChallengeProgressDto uncompleteItem(Long challengeId,
+                                               Long itemId,
+                                               String username) {
+
+        ChallengeParticipation participation =
+                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+
+        if (participation == null) {
+            throw new IllegalStateException("User has not joined this challenge");
+        }
+
+        boolean removed = participation.getCompletedItems()
+                .removeIf(ci -> ci.getId().equals(itemId));
+
+        if (!removed) {
+            throw new IllegalStateException("El ítem no estaba completado previamente");
+        }
+
+        // Si ahora el usuario ya no tiene todos los ítems completos, borrar el timestamp
+        if (participation.getCompletedItems().size() <
+                participation.getChallenge().getItems().size()) {
+            participation.setCompletedAt(null);
+        }
+
+        participationRepository.save(participation);
+
+        // → DTO desde el *mapper*
+        return mapper.toProgressDto(participation);
+    }
 }

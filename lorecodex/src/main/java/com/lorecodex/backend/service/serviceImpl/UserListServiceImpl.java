@@ -35,25 +35,31 @@ public class UserListServiceImpl implements UserListService {
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        UserList userList = UserList.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .user(user)
-                .items(request.getItems().stream()
-                        .map(itemRequest -> ListItem.builder()
-                                .type(itemRequest.getType())
-                                .referenceId(itemRequest.getReferenceId())
-                                .position(itemRequest.getPosition())
-                                .build())
-                        .toList())
-                .build();
-
+        UserList userList = new UserList();
+        userList.setTitle(request.getTitle());
+        userList.setDescription(request.getDescription());
         userList.setCreatedAt(LocalDateTime.now());
         userList.setUpdatedAt(LocalDateTime.now());
+        userList.setUser(userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+
+        // Agregar ítems a la lista
+        if (request.getItems() != null) {
+            final UserList tempUserList = userList; // Variable efectivamente final
+            List<ListItem> items = request.getItems().stream()
+                    .map(itemRequest -> ListItem.builder()
+                            .type(itemRequest.getType())
+                            .referenceId(itemRequest.getReferenceId())
+                            .position(itemRequest.getPosition())
+                            .userList(tempUserList) // Usar la variable final
+                            .build())
+                    .toList();
+            userList.setItems(items);
+        }
+
         userList = userListRepository.save(userList);
+
+        // Convertir la lista a DTO incluyendo los ítems
         return userListMapper.toResponse(userList);
     }
 

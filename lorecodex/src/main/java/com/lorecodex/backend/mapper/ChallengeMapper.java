@@ -41,6 +41,8 @@ public class ChallengeMapper {
                 .title(challenge.getTitle())
                 .description(challenge.getDescription())
                 .creatorUsername(challenge.getCreator().getUsername())
+                .difficulty(challenge.getDifficulty() != null ? challenge.getDifficulty().name() : "UNKNOWN") // Manejo de null
+                .creatorId(challenge.getCreator().getId())
                 .items(challenge.getItems().stream()
                         .map(item -> ChallengeItemDto.builder()
                                 .id(item.getId())
@@ -51,15 +53,24 @@ public class ChallengeMapper {
                 .build();
     }
 
-    public ChallengeProgressDto toProgressDto(ChallengeParticipation participation) {
-        int total = participation.getChallenge().getItems().size();
-        int completed = participation.getCompletedItems().size();
-        double progress = total == 0 ? 0 : (double) completed / total * 100.0;
+    public ChallengeProgressDto toProgressDto(ChallengeParticipation p) {
+
+        int total     = p.getChallenge().getItems().size();
+        int completed = p.getCompletedItems().size();
+        double prog   = total == 0 ? 0 : (double) completed / total * 100.0;
+
         return ChallengeProgressDto.builder()
-                .challengeId(participation.getChallenge().getId())
+                .challengeId(p.getChallenge().getId())
                 .completed(completed)
                 .total(total)
-                .progress(progress)
+                .progress(prog)
+                // -------------- aquí ----------------
+                .completedItems(
+                        p.getCompletedItems()          // Set<ChallengeItem>
+                                .stream()
+                                .map(ChallengeItem::getId)    // Long
+                                .toList())
+                //-------------------------------------
                 .build();
     }
 }

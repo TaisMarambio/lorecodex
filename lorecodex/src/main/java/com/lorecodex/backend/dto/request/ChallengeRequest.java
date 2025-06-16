@@ -20,4 +20,7 @@ public class ChallengeRequest {
 
     // Descripciones de ítems en orden
     private List<@NotBlank String> items;
+
+    @NotBlank
+    private String difficulty;
 }

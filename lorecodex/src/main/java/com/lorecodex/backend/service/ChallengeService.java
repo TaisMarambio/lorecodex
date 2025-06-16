@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ChallengeService {
 
-    void createChallenge(String creatorUsername, ChallengeRequest request);
+    ChallengeResponse createChallenge(String creatorUsername, ChallengeRequest request);
 
     void joinChallenge(Long challengeId, String username);
 
@@ -28,5 +28,14 @@ public interface ChallengeService {
 
     //quiero buscar challenges por titulo
     List<ChallengeResponse> findChallengesByTitle(String title);
+
+    //quiero desunirme de un challenge
+    void leaveChallenge(Long challengeId, Long userId);
+
+    //difficultad de un challenge
+    String getChallengeDifficulty(Long challengeId);
+
+    //quiero que el usuario que se unio al challenge pueda marcar como uncomplete un item
+    ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, String username);
 
 }

@@ -4,6 +4,8 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ChallengeRequest;
 import com.lorecodex.backend.dto.response.challenge.ChallengeProgressDto;
 import com.lorecodex.backend.dto.response.challenge.ChallengeResponse;
+import com.lorecodex.backend.mapper.ChallengeMapper;
+import com.lorecodex.backend.model.Challenge;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.ChallengeService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +22,14 @@ import java.util.List;
 public class ChallengeController {
 
     private final ChallengeService service;
+    private final ChallengeMapper challengeMapper;
 
     @PostMapping
     public ResponseEntity<ChallengeResponse> create(@RequestBody ChallengeRequest request,
                                                     @AuthenticationPrincipal User user) {
-        service.createChallenge(user.getUsername(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        ChallengeResponse dto = service.createChallenge(user.getUsername(), request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @PutMapping("/{id}")
@@ -85,5 +89,45 @@ public class ChallengeController {
     public ResponseEntity<List<ChallengeResponse>> searchChallenges(@RequestParam String title) {
         List<ChallengeResponse> challenges = service.findChallengesByTitle(title);
         return ResponseEntity.ok(challenges);
+    }
+
+    //quiero obtener el username del creador de un challenge
+    @GetMapping("/{id}/author")
+    public ResponseEntity<String> getAuthorUsername(@PathVariable Long id) {
+        ChallengeResponse challenge = service.findById(id);
+        if (challenge != null) {
+            return ResponseEntity.ok(challenge.getCreatorUsername());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    //quiero que mi usuario pueda "desunirse" de un challenge, que se elimine su participacion
+    @PostMapping("/{id}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveChallenge(@PathVariable Long id,
+                               @AuthenticationPrincipal User user) {
+        service.leaveChallenge(id, user.getId());
+    }
+
+    //dificultad de un challenge
+    @GetMapping("/{id}/difficulty")
+    public ResponseEntity<String> getChallengeDifficulty(@PathVariable Long id) {
+        String difficulty = service.getChallengeDifficulty(id);
+        if (difficulty != null) {
+            return ResponseEntity.ok(difficulty);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{id}/items/{itemId}/uncomplete")
+    public ResponseEntity<ChallengeProgressDto> uncompleteItem(
+            @PathVariable Long id,
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal User user
+    ) {
+        ChallengeProgressDto dto = service.uncompleteItem(id, itemId, user.getUsername());
+        return ResponseEntity.ok(dto);
     }
 }
