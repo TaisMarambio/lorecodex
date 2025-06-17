@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GameRequest {
     private String title;
-    private Double rating;
+    private Double averageRating;
     private String genre;
     private String description;
     private String coverImage;

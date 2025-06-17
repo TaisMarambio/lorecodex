@@ -90,7 +90,7 @@ public class IgdbServiceImpl implements IgdbService {
         game.setReleaseDate(request.getReleaseDate());
         game.setGenres(request.getGenres());
         game.setDevelopersAndPublishers(Set.of()); // vacío por ahora
-        game.setRating(0.0);
+        game.setAverageRating(0.0);
         game.setLikes(0);
 
         return gameRepository.save(game);
@@ -148,7 +148,7 @@ public class IgdbServiceImpl implements IgdbService {
                 .collect(Collectors.toSet())
                 : Set.of()
         );
-        game.setRating(igdbGame.getRating());
+        game.setAverageRating(igdbGame.getRating());
         game.setLikes(0);
 
         return Optional.of(gameRepository.save(game));

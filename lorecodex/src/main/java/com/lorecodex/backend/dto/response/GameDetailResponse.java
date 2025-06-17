@@ -17,8 +17,8 @@ public class GameDetailResponse {
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
-    private Double rating;
     private Integer likes;
     private Set<String> genres;
     private Set<String> developersAndPublishers;
+    private Double averageRating;
 }

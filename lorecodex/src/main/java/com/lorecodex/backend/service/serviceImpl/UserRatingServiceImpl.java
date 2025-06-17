@@ -2,6 +2,7 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
+import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +15,12 @@ import java.util.Optional;
 public class UserRatingServiceImpl implements UserRatingService {
 
     private final UserRatingRepository userRatingRepository;
+    private final GameRepository gameRepository;
 
     @Autowired
-    public UserRatingServiceImpl(UserRatingRepository userRatingRepository) {
+    public UserRatingServiceImpl(UserRatingRepository userRatingRepository, GameRepository gameRepository) {
         this.userRatingRepository = userRatingRepository;
+        this.gameRepository = gameRepository;
     }
 
     @Override
@@ -47,16 +50,30 @@ public class UserRatingServiceImpl implements UserRatingService {
         r.setUser(user);
         r.setGame(game);
         r.setRating(rating);
-        return saveRating(r);
+        UserRating saved = saveRating(r);
+
+        // Recalcula y guarda el promedio
+        Double avg = userRatingRepository.findAverageRatingByGameId(game.getId());
+        game.setAverageRating(avg != null ? avg : 0.0);
+        // Asegúrate de tener acceso al GameRepository aquí para guardar el cambio
+        gameRepository.save(game);
+        return saved;
     }
 
     @Override
     public void deleteRating(User user, Game game) {
         userRatingRepository.deleteByUserAndGame(user, game);
+
+        // Recalcula y guarda el promedio
+        Double avg = userRatingRepository.findAverageRatingByGameId(game.getId());
+        game.setAverageRating(avg != null ? avg : 0.0);
+        gameRepository.save(game);
     }
 
     @Override
     public Double getAverageRatingByGameId(Long gameId) {
-        return userRatingRepository.findAverageRatingByGameId(gameId);
+        Game game = gameRepository.findById(gameId).orElse(null);
+        assert game != null;
+        return game.getAverageRating();
     }
 }

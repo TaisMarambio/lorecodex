@@ -39,7 +39,7 @@ public class IgdbGameMapper {
                 .igdbId(igdbGame.getIgdbId())
                 .title(igdbGame.getName())
                 .description(igdbGame.getSummary())
-                .rating(igdbGame.getRating())
+                .averageRating(igdbGame.getRating())
                 .coverImage(
                         igdbGame.getCover() != null
                                 ? "https:" + igdbGame.getCover().getUrl()
@@ -56,7 +56,7 @@ public class IgdbGameMapper {
                         .map(ic -> ic.getCompany().getName())
                         .collect(Collectors.toSet())
                         : Set.of())
-                .rating(null)
+                .averageRating(null)
                 .likes(null)
                 .build();
     }

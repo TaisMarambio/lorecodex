@@ -26,7 +26,6 @@ public class Game {
     @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
     private LocalDate releaseDate;
-    private Double rating;
     private Integer likes;
 
     @ElementCollection
@@ -50,4 +49,7 @@ public class Game {
 
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
+
+    @Column(name = "average_rating")
+    private Double averageRating;
 }

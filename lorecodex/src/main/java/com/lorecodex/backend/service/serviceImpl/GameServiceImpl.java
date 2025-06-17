@@ -34,8 +34,8 @@ public class GameServiceImpl implements GameService {
     @Override
     public Game createGame(Game game) {
         // Initialize default values if not present
-        if (game.getRating() == null) {
-            game.setRating(0.0);
+        if (game.getAverageRating() == null) {
+            game.setAverageRating(0.0);
         }
         if (game.getLikes() == null) {
             game.setLikes(0);
@@ -103,7 +103,7 @@ public class GameServiceImpl implements GameService {
         newGame.setDescription(request.getDescription());
         newGame.setCoverImage(request.getCoverImage());
         newGame.setReleaseDate(request.getReleaseDate());
-        newGame.setRating(0.0); // o null, según tu lógica
+        newGame.setAverageRating(0.0); // o null, según tu lógica
         newGame.setLikes(0);
         newGame.setGenres(request.getGenres());
         newGame.setDevelopersAndPublishers(new HashSet<>());

@@ -22,7 +22,7 @@ public class GameMapper {
                 .description(game.getDescription())
                 .coverImage(game.getCoverImage())
                 .releaseDate(game.getReleaseDate())
-                .rating(game.getRating())
+                .averageRating(game.getAverageRating())
                 .likes(game.getLikes())
                 .genres(game.getGenres())
                 .developersAndPublishers(game.getDevelopersAndPublishers())
@@ -50,7 +50,7 @@ public class GameMapper {
         game.setReleaseDate(gameRequest.getReleaseDate());
         game.setGenres(gameRequest.getGenres());
         game.setDevelopersAndPublishers(gameRequest.getDevelopersAndPublishers());
-        game.setRating(0.0);
+        game.setAverageRating(gameRequest.getAverageRating());
         game.setLikes(0);
 
         return game;
