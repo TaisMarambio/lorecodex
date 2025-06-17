@@ -17,6 +17,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
+@Table(name="challenge")
 public class Challenge {
 
     @Id
@@ -52,5 +54,6 @@ public class Challenge {
 
     //quiero que tengan dificultad del tipo: facil, medio, difcil, etc
     @Enumerated(EnumType.STRING)
+    @Column(name = "challenge_difficulty")
     private ChallengeDifficulty difficulty;
 }

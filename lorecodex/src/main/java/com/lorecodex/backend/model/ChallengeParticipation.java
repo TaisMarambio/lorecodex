@@ -16,6 +16,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
+@Table(name="challenge_participation")
 public class ChallengeParticipation {
 
     @Id

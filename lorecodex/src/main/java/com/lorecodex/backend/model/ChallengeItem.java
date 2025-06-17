@@ -11,6 +11,8 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+
+@Table(name="challenge_item")
 public class ChallengeItem {
 
     @Id
