@@ -64,9 +64,6 @@ public class SecurityConfig  {
                         //GameNotes endpoints
                         .requestMatchers("/notes/**").authenticated()
 
-                        //non-required authentication
-                        .requestMatchers("/games/{id}/average-rating").permitAll()
-
                         // Reviews endpoints
                         .requestMatchers("/reviews/**").permitAll()
 

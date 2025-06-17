@@ -10,6 +10,7 @@ import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.NewsService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

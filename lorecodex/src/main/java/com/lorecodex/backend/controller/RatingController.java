@@ -1,6 +1,7 @@
 package com.lorecodex.backend.controller;
 
-import com.lorecodex.backend.dto.request.UserRatingRequest;
+import com.lorecodex.backend.dto.RatingSummaryDto;
+import com.lorecodex.backend.dto.request.RatingRequest;
 import com.lorecodex.backend.dto.response.UserRatingResponse;
 import com.lorecodex.backend.mapper.UserRatingMapper;
 import com.lorecodex.backend.model.Game;
@@ -8,12 +9,15 @@ import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
 import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.UserRatingService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,13 +40,36 @@ public class RatingController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/setRating/{gameId}")
-    public ResponseEntity<?> rateGame(@RequestBody UserRatingRequest request,
-                                      @AuthenticationPrincipal User user) {
-        Optional<Game> gameOpt = gameRepository.findById(request.getGameId());
-        if (gameOpt.isEmpty()) return ResponseEntity.notFound().build();
-        UserRating rating = userRatingService.rateOrUpdateRating(user, gameOpt.get(), request.getRating());
-        return ResponseEntity.ok(ratingMapper.toDTO(rating));
+    @PostMapping("/{gameId}")
+    public ResponseEntity<UserRatingResponse> rateGame(
+            @PathVariable Long gameId,
+            @RequestBody @Valid RatingRequest dto,
+            @AuthenticationPrincipal User user) {
+
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        UserRating saved = userRatingService.rateOrUpdateRating(user, game, dto.getRating());
+        return ResponseEntity.ok(ratingMapper.toDTO(saved));
+    }
+
+    @GetMapping("/{gameId}/rating-summary")
+    public ResponseEntity<RatingSummaryDto> getRatingSummary(@PathVariable Long gameId, @AuthenticationPrincipal User user) {
+        // 1) Aseguramos que el juego exista
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // 2) Obtenemos el promedio, usando 0.0 si viene null
+        Double avgObj = userRatingService.getAverageRatingByGameId(gameId);
+            double avg = (avgObj != null) ? avgObj : 0.0;
+
+        // 3) Obtenemos mi rating (puede ser null)
+        Integer mine = userRatingService
+                .getUserRating(user, game)
+                .map(UserRating::getRating)
+                .map(Double::intValue)
+                .orElse(null);
+
+        return ResponseEntity.ok(new RatingSummaryDto(avg, mine));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -57,7 +84,7 @@ public class RatingController {
                 .orElse(ResponseEntity.noContent().build());
     }
 
-    @GetMapping("/all/game/{gameId}")
+    /*@GetMapping("/all/game/{gameId}")
     public ResponseEntity<?> getAllRatingsForGame(@PathVariable Long gameId) {
         Optional<Game> gameOpt = gameRepository.findById(gameId);
         if (gameOpt.isEmpty()) return ResponseEntity.notFound().build();
@@ -68,7 +95,7 @@ public class RatingController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responseList);
-    }
+    }*/
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my")
@@ -95,9 +122,11 @@ public class RatingController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/average-rating/{gameId}")
+
+    @GetMapping("/{gameId}/average-rating")
     public ResponseEntity<?> getAverageRating(@PathVariable Long gameId) {
         Double average = userRatingService.getAverageRatingByGameId(gameId);
         return ResponseEntity.ok(average != null ? average : 0.0);
     }
+
 }

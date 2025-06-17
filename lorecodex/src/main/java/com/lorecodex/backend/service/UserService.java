@@ -1,6 +1,7 @@
 package com.lorecodex.backend.service;
 
 import com.lorecodex.backend.dto.response.UserProfileResponse;
+import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.model.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

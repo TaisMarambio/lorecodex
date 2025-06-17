@@ -1,12 +1,10 @@
 package com.lorecodex.backend.notification;
 
 import com.lorecodex.backend.dto.response.UserResponse;
-import com.lorecodex.backend.notification.event.FollowedUserEvent;
-import com.lorecodex.backend.notification.event.GuideCommentedEvent;
-import com.lorecodex.backend.notification.event.GuideCreatedEvent;
-import com.lorecodex.backend.notification.event.NewsCommentedEvent;
+import com.lorecodex.backend.notification.event.*;
 import com.lorecodex.backend.service.FollowService;
 import com.lorecodex.backend.service.NotificationService;
+import com.lorecodex.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -19,6 +17,7 @@ public class NotificationEventListener {
 
     private final NotificationService notificationService;
     private final FollowService followService;
+    private final UserService userService;
 
     @EventListener
     public void handleFollowedUser(FollowedUserEvent event) {
@@ -39,20 +38,40 @@ public class NotificationEventListener {
     }
 
     @EventListener
-    public void handleGuideCreatedByFollowedUser(GuideCreatedEvent event) {
+    public void handleGuideCreatedByFollowedUser(GuidePublishedEvent event) {
         // los seguidores del autor
         List<UserResponse> followers = followService.getFollowers(event.authorId());
-        String message = "¡" + event.authorUsername() + " ha creado una nueva guía: \"" + event.guideTitle() + "\"!";
+        String message = "¡" + event.authorUsername() + " ha publicado una nueva guía: \"" + event.guideTitle() + "\"!";
         for (UserResponse follower : followers) {
             notificationService.notifyUser(follower.getId(), message);
         }
     }
 
     @EventListener
-    public void handleGuideUpdatedByFollowedUser(GuideCreatedEvent event) {
+    public void handleGuideUpdatedByFollowedUser(GuideUpdatedEvent event) {
         // los seguidores del autor
         List<UserResponse> followers = followService.getFollowers(event.authorId());
         String message = "¡" + event.authorUsername() + " ha actualizado la guía: \"" + event.guideTitle() + "\"!";
+        for (UserResponse follower : followers) {
+            notificationService.notifyUser(follower.getId(), message);
+        }
+    }
+
+    @EventListener
+    public void handleChallengeCreatedByFollowedUser(ChallengeCreatedEvent event) {
+        // los seguidores del autor
+        List<UserResponse> followers = followService.getFollowers(event.authorId());
+        String message = "¡" + event.authorUsername() + " ha creado un nuevo desafío: " + event.challengeTitle() + "!";
+        for (UserResponse follower : followers) {
+            notificationService.notifyUser(follower.getId(), message);
+        }
+    }
+
+    @EventListener
+    public void handleListCreatedEventByFollowedUser(ListPublishedEvent event) {
+        // los seguidores del autor
+        List<UserResponse> followers = followService.getFollowers(event.authorId());
+        String message = "¡" + event.authorUsername() + " ha creado una nueva lista: " + event.listTitle() + "!";
         for (UserResponse follower : followers) {
             notificationService.notifyUser(follower.getId(), message);
         }

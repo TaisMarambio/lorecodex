@@ -8,6 +8,7 @@ import com.lorecodex.backend.model.Challenge;
 import com.lorecodex.backend.model.ChallengeItem;
 import com.lorecodex.backend.model.ChallengeParticipation;
 import com.lorecodex.backend.model.User;
+import com.lorecodex.backend.notification.event.ChallengeCreatedEvent;
 import com.lorecodex.backend.repository.ChallengeParticipationRepository;
 import com.lorecodex.backend.repository.ChallengeRepository;
 import com.lorecodex.backend.repository.UserRepository;
@@ -15,6 +16,8 @@ import com.lorecodex.backend.service.ChallengeService;
 import com.lorecodex.backend.model.ChallengeDifficulty;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.HashSet;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,7 @@ public class ChallengeServiceImpl implements ChallengeService {
     private final ChallengeParticipationRepository participationRepository;
     private final UserRepository userRepository;
     private final ChallengeMapper mapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public ChallengeResponse createChallenge(String creatorUsername, ChallengeRequest request) {
@@ -66,6 +70,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         // Guardar el challenge
         Challenge savedChallenge = challengeRepository.save(challenge);
+        eventPublisher.publishEvent(new ChallengeCreatedEvent(savedChallenge.getCreator().getId(), savedChallenge.getCreator().getUsername(), savedChallenge.getTitle()));
         return mapper.toDto(savedChallenge);
     }
 

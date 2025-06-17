@@ -4,8 +4,7 @@ import com.lorecodex.backend.dto.request.GuideRequest;
 import com.lorecodex.backend.dto.response.GuideResponse;
 import com.lorecodex.backend.mapper.GuideMapper;
 import com.lorecodex.backend.model.*;
-import com.lorecodex.backend.notification.event.GuideCreatedEvent;
-import com.lorecodex.backend.notification.event.GuideUpdatedEvent;
+import com.lorecodex.backend.notification.event.GuidePublishedEvent;
 import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.GuideService;
 
@@ -67,8 +66,8 @@ public class GuideServiceImpl implements GuideService {
         // }
 
         Guide saved = guideRepository.save(guide);
-        if (guide.isPublished()==true) {
-            eventPublisher.publishEvent(new GuideCreatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
+        if (guide.isPublished()) {
+            eventPublisher.publishEvent(new GuidePublishedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
         }
         return guideMapper.mapToResponse(saved);
     }
@@ -115,9 +114,6 @@ public class GuideServiceImpl implements GuideService {
 
         Guide saved = guideRepository.save(guide);
         // Publicar evento de actualización si la guía está publicada
-        if (saved.isPublished()) {
-            eventPublisher.publishEvent(new GuideUpdatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
-        }
         return guideMapper.mapToResponse(saved);
     }
 
@@ -191,6 +187,7 @@ public class GuideServiceImpl implements GuideService {
         guide.setUpdatedAt(LocalDateTime.now());
 
         Guide savedGuide = guideRepository.save(guide);
+        eventPublisher.publishEvent(new GuidePublishedEvent(savedGuide.getUser().getId(), savedGuide.getUser().getUsername(), savedGuide.getTitle()));
         return Optional.of(guideMapper.mapToResponse(savedGuide));
     }
 

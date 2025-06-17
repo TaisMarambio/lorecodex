@@ -1,6 +1,7 @@
 package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.dto.response.UserProfileResponse;
+import com.lorecodex.backend.dto.response.UserResponse;
 import com.lorecodex.backend.mapper.ReviewMapper;
 import com.lorecodex.backend.mapper.UserProfileMapper;
 import com.lorecodex.backend.model.User;
