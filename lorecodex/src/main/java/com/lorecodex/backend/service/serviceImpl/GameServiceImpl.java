@@ -5,6 +5,8 @@ import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.repository.GameRepository;
 import com.lorecodex.backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -27,13 +29,17 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Page<Game> getAllGamesPaginated(Pageable pageable) {
+        return gameRepository.findAll(pageable);
+    }
+
+    @Override
     public Optional<Game> getGameById(Long id) {
         return gameRepository.findById(id);
     }
 
     @Override
     public Game createGame(Game game) {
-        // Initialize default values if not present
         if (game.getRating() == null) {
             game.setRating(0.0);
         }
@@ -48,7 +54,6 @@ public class GameServiceImpl implements GameService {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
 
-        // Update only if values are not null
         if (gameDetails.getTitle() != null) {
             game.setTitle(gameDetails.getTitle());
         }
@@ -82,6 +87,11 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Page<Game> findGamesByTitle(String title, Pageable pageable) {
+        return gameRepository.findByTitleContainingIgnoreCase(title, pageable);
+    }
+
+    @Override
     public Game incrementLikes(Long id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
@@ -91,11 +101,10 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Game importGameFromIgdb(CreateGameFromIgdbRequest request) {
-        // Verificamos si ya existe en la base por título (podés usar ID de IGDB si lo guardás)
         Optional<Game> existingGame = gameRepository.findByTitleIgnoreCase(request.getTitle());
 
         if (existingGame.isPresent()) {
-            return existingGame.get(); // ya lo tenés guardado
+            return existingGame.get();
         }
 
         Game newGame = new Game();

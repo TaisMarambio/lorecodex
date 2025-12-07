@@ -10,6 +10,8 @@ import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.NewsService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,12 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    public Page<NewsResponse> findAllPublishedNewsPaginated(Pageable pageable) {
+        Page<News> newsPage = newsRepository.findByIsPublishedTrueOrderByCreatedAtDesc(pageable);
+        return newsPage.map(newsMapper::toResponse);
+    }
+
+    @Override
     public Optional<NewsResponse> findById(Long id) {
         return newsRepository.findById(id)
                 .map(newsMapper::toResponse);
@@ -53,13 +61,11 @@ public class NewsServiceImpl implements NewsService {
         News news = newsMapper.toEntity(request, user);
         news.setCreatedAt(LocalDateTime.now());
         news.setUpdatedAt(LocalDateTime.now());
-        news.setDraft(true); // Set draft to true by default
-        news.setPublished(false); // Set published to false by default
-
+        news.setDraft(true);
+        news.setPublished(false);
 
         return newsMapper.toResponse(newsRepository.save(news));
     }
-
 
     @Override
     public NewsResponse updateNews(Long id, NewsRequest request) {
@@ -85,6 +91,12 @@ public class NewsServiceImpl implements NewsService {
         return newsRepository.findByTagsContainingIgnoreCase(tag).stream()
                 .map(newsMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<NewsResponse> findByTagPaginated(String tag, Pageable pageable) {
+        Page<News> newsPage = newsRepository.findByTagsContainingIgnoreCase(tag, pageable);
+        return newsPage.map(newsMapper::toResponse);
     }
 
     @Override
@@ -118,6 +130,12 @@ public class NewsServiceImpl implements NewsService {
         return newsRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(newsMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<NewsResponse> findNewsByUserIdPaginated(Long userId, Pageable pageable) {
+        Page<News> newsPage = newsRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        return newsPage.map(newsMapper::toResponse);
     }
 
     @Override

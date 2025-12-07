@@ -11,6 +11,8 @@ import com.lorecodex.backend.service.GuideService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -88,6 +90,12 @@ public class GuideServiceImpl implements GuideService {
     }
 
     @Override
+    public Page<GuideResponse> getAllGuidesPaginated(Pageable pageable) {
+        Page<Guide> guidesPage = guideRepository.findAll(pageable);
+        return guidesPage.map(guideMapper::mapToResponse);
+    }
+
+    @Override
     @Transactional
     public GuideResponse updateGuide(Long id, GuideRequest request) {
         Guide guide = guideRepository.findById(id)
@@ -146,6 +154,12 @@ public class GuideServiceImpl implements GuideService {
     }
 
     @Override
+    public Page<GuideResponse> getDraftsByUserIdPaginated(Long userId, Pageable pageable) {
+        Page<Guide> drafts = guideRepository.findByUserIdAndIsDraftTrue(userId, pageable);
+        return drafts.map(guideMapper::mapToResponse);
+    }
+
+    @Override
     public List<GuideResponse> getPublishedGuidesByUserId(Long id) {
         return List.of();
     }
@@ -173,6 +187,12 @@ public class GuideServiceImpl implements GuideService {
     }
 
     @Override
+    public Page<GuideResponse> getPublishedGuidesPaginated(Pageable pageable) {
+        Page<Guide> guides = guideRepository.findByIsPublishedTrue(pageable);
+        return guides.map(guideMapper::mapToResponse);
+    }
+
+    @Override
     public String uploadCoverImage(Long guideId, MultipartFile file) {
         return "";
     }
@@ -191,6 +211,11 @@ public class GuideServiceImpl implements GuideService {
         guide.setUpdatedAt(LocalDateTime.now());
 
         Guide savedGuide = guideRepository.save(guide);
+        eventPublisher.publishEvent(new GuideCreatedEvent(
+                savedGuide.getUser().getId(),
+                savedGuide.getUser().getUsername(),
+                savedGuide.getTitle()
+        ));
         return Optional.of(guideMapper.mapToResponse(savedGuide));
     }
 
@@ -209,5 +234,26 @@ public class GuideServiceImpl implements GuideService {
 
         Guide savedGuide = guideRepository.save(guide);
         return Optional.of(guideMapper.mapToResponse(savedGuide));
+    }
+
+    @Override
+    public String getAuthorNameByGuideId(Long guideId) {
+        Guide guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        return guide.getUser().getUsername();
+    }
+
+    @Override
+    public List<GuideResponse> getPublishedGuidesByTitle(String title) {
+        List<Guide> guides = guideRepository.findByTitleContainingIgnoreCaseAndIsPublishedTrue(title);
+        return guides.stream()
+                .map(guideMapper::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<GuideResponse> getPublishedGuidesByTitlePaginated(String title, Pageable pageable) {
+        Page<Guide> guides = guideRepository.findByTitleContainingIgnoreCaseAndIsPublishedTrue(title, pageable);
+        return guides.map(guideMapper::mapToResponse);
     }
 }

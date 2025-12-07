@@ -26,4 +26,8 @@ public interface ChallengeService {
 
     ChallengeProgressDto getChallengeProgress(Long challengeId, String username);
 
+    List<ChallengeResponse> findChallengesByTitle(String title);
+
+
+    ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, String username);
 }

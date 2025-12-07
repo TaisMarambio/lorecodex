@@ -3,7 +3,6 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
-import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +27,40 @@ public class UserListController {
     }
 
     @GetMapping("/user/{userId}/get-lists")
-    public ResponseEntity<List<UserListResponse>> getListsForUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(userListService.getListsForUser(userId));
+    public ResponseEntity<List<UserListResponse>> getListsForUser(
+            @PathVariable Long userId,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "12") int size) {
+
+        List<UserListResponse> allLists = userListService.getListsForUser(userId);
+
+        // Paginación manual
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, allLists.size());
+
+        if (fromIndex >= allLists.size()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        return ResponseEntity.ok(allLists.subList(fromIndex, toIndex));
     }
 
-    @GetMapping("/{listId}/get-all")
-    public ResponseEntity<List<UserListResponse>> getAllLists() {
-        return ResponseEntity.ok(userListService.getAllLists());
+    @GetMapping("/get-all")
+    public ResponseEntity<List<UserListResponse>> getAllLists(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "12") int size) {
+
+        List<UserListResponse> allLists = userListService.getAllLists();
+
+        // Paginación manual
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, allLists.size());
+
+        if (fromIndex >= allLists.size()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        return ResponseEntity.ok(allLists.subList(fromIndex, toIndex));
     }
 
     @PutMapping("/{listId}/update")
@@ -76,5 +102,17 @@ public class UserListController {
     ) {
         userListService.reorderItems(listId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{listId}/get-list")
+    public ResponseEntity<UserListResponse> getListById(@PathVariable Long listId) {
+        return ResponseEntity.ok(userListService.getListById(listId));
+    }
+
+    @GetMapping("/{listId}/author")
+    public ResponseEntity<String> getListAuthor(@PathVariable Long listId) {
+        UserListResponse list = userListService.getListById(listId);
+        // Assuming you want to return the username from the list
+        return ResponseEntity.ok("User ID: " + list.getUserId());
     }
 }

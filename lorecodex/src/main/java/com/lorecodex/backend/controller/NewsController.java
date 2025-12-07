@@ -4,6 +4,9 @@ import com.lorecodex.backend.dto.request.NewsRequest;
 import com.lorecodex.backend.dto.response.NewsResponse;
 import com.lorecodex.backend.service.NewsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +21,13 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping
-    public ResponseEntity<List<NewsResponse>> getAllPublishedNews() {
-        return ResponseEntity.ok(newsService.findAllPublishedNews());
+    public ResponseEntity<List<NewsResponse>> getAllPublishedNews(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NewsResponse> newsPage = newsService.findAllPublishedNewsPaginated(pageable);
+        return ResponseEntity.ok(newsPage.getContent());
     }
 
     @GetMapping("/{id}")
@@ -68,12 +76,19 @@ public class NewsController {
     }
 
     @GetMapping("/tag/{tag}")
-    public ResponseEntity<List<NewsResponse>> getNewsByTag(@PathVariable String tag) {
-        return ResponseEntity.ok(newsService.findByTag(tag));
+    public ResponseEntity<List<NewsResponse>> getNewsByTag(
+            @PathVariable String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NewsResponse> newsPage = newsService.findByTagPaginated(tag, pageable);
+        return ResponseEntity.ok(newsPage.getContent());
     }
 
     @GetMapping("/recent")
-    public ResponseEntity<List<NewsResponse>> getRecentNews(@RequestParam(defaultValue = "5") int limit) {
+    public ResponseEntity<List<NewsResponse>> getRecentNews(
+            @RequestParam(defaultValue = "5") int limit) {
         return ResponseEntity.ok(newsService.findRecentNews(limit));
     }
 
@@ -86,7 +101,13 @@ public class NewsController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<NewsResponse>> getNewsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(newsService.findNewsByUserId(userId));
+    public ResponseEntity<List<NewsResponse>> getNewsByUser(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NewsResponse> newsPage = newsService.findNewsByUserIdPaginated(userId, pageable);
+        return ResponseEntity.ok(newsPage.getContent());
     }
 }

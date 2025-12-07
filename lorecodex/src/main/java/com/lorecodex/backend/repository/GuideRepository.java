@@ -1,6 +1,8 @@
 package com.lorecodex.backend.repository;
 
 import com.lorecodex.backend.model.Guide;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +14,11 @@ public interface GuideRepository extends JpaRepository<Guide, Long> {
     // List<Guide> findByGameId(Integer gameId);
     // List<Guide> findByUserId(Integer userId);
     List<Guide> findByUserIdAndIsDraftTrue(Long userId);
+    Page<Guide> findByUserIdAndIsDraftTrue(Long userId, Pageable pageable);
+
     List<Guide> findByIsPublishedTrue();
+    Page<Guide> findByIsPublishedTrue(Pageable pageable);
 
-
+    List<Guide> findByTitleContainingIgnoreCaseAndIsPublishedTrue(String title);
+    Page<Guide> findByTitleContainingIgnoreCaseAndIsPublishedTrue(String title, Pageable pageable);
 }

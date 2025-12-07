@@ -6,6 +6,9 @@ import com.lorecodex.backend.mapper.GameMapper;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,23 +30,25 @@ public class GameController {
         this.gameMapper = gameMapper;
     }
 
-    // Endpoint público para obtener todos los juegos
+    // Endpoint con paginación
     @GetMapping("/allGames")
-    public ResponseEntity<List<GameDetailResponse>> getAllGames(@RequestParam(required = false) String title) {
-        List<Game> games;
+    public ResponseEntity<List<GameDetailResponse>> getAllGames(
+            @RequestParam(required = false) String title,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Game> gamesPage;
 
         if (title != null && !title.isEmpty()) {
-            // Si se proporciona un título, buscar por título
-            games = gameService.findGamesByTitle(title);
+            gamesPage = gameService.findGamesByTitle(title, pageable);
         } else {
-            // De lo contrario, obtener todos los juegos
-            games = gameService.getAllGames();
+            gamesPage = gameService.getAllGamesPaginated(pageable);
         }
 
-        return ResponseEntity.ok(gameMapper.toDTOList(games));
+        return ResponseEntity.ok(gameMapper.toDTOList(gamesPage.getContent()));
     }
 
-    // Endpoint público para obtener un juego por ID
     @GetMapping("/{id}")
     public ResponseEntity<GameDetailResponse> getGameById(@PathVariable Long id) {
         return gameService.getGameById(id)
@@ -51,7 +56,6 @@ public class GameController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Solo los administradores pueden crear juegos
     @PostMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<GameDetailResponse> createGame(@RequestBody GameRequest gameRequest) {
@@ -62,10 +66,11 @@ public class GameController {
                 .body(gameMapper.toDTO(savedGame));
     }
 
-    // Solo los administradores pueden actualizar juegos
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<GameDetailResponse> updateGame(@PathVariable Long id, @RequestBody GameRequest gameRequest) {
+    public ResponseEntity<GameDetailResponse> updateGame(
+            @PathVariable Long id,
+            @RequestBody GameRequest gameRequest) {
         return gameService.getGameById(id)
                 .map(existingGame -> {
                     gameMapper.updateEntityFromRequest(existingGame, gameRequest);
@@ -75,7 +80,6 @@ public class GameController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Solo los administradores pueden eliminar juegos
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
@@ -86,10 +90,20 @@ public class GameController {
         return ResponseEntity.notFound().build();
     }
 
-    // Endpoint para dar likes a un juego (puede ser público)
     @PostMapping("/{id}/like")
     public ResponseEntity<GameDetailResponse> likeGame(@PathVariable Long id) {
         Game likedGame = gameService.incrementLikes(id);
         return ResponseEntity.ok(gameMapper.toDTO(likedGame));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<GameDetailResponse>> searchGamesByTitle(
+            @RequestParam String title,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Game> games = gameService.findGamesByTitle(title, pageable);
+        return ResponseEntity.ok(gameMapper.toDTOList(games.getContent()));
     }
 }

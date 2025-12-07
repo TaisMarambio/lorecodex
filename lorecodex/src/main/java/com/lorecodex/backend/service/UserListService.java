@@ -3,7 +3,6 @@ package com.lorecodex.backend.service;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
-import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
 
 import java.util.List;
