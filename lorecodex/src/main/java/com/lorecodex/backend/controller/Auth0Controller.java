@@ -72,8 +72,23 @@ public class Auth0Controller {
     }
 
     private User createUserFromAuth0(String auth0Id, String email, String name, String nickname) {
-        // Determinar username
-        String username = nickname != null ? nickname : email.split("@")[0];
+        // Validar que tengamos al menos un identificador
+        if (email == null && nickname == null && name == null) {
+            throw new IllegalArgumentException("Cannot create user: no email, nickname, or name provided by Auth0");
+        }
+
+        // Determinar username con fallbacks
+        String username;
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            username = nickname;
+        } else if (email != null && !email.trim().isEmpty()) {
+            username = email.split("@")[0];
+        } else if (name != null && !name.trim().isEmpty()) {
+            username = name.replaceAll("\\s+", "_"); // Reemplazar espacios con guiones bajos
+        } else {
+            // Último recurso: usar una parte del auth0Id
+            username = "user_" + auth0Id.substring(auth0Id.lastIndexOf("|") + 1, Math.min(auth0Id.lastIndexOf("|") + 9, auth0Id.length()));
+        }
 
         // Si el username ya existe, agregar un sufijo
         String finalUsername = username;
@@ -93,11 +108,11 @@ public class Auth0Controller {
         User newUser = User.builder()
                 .auth0Id(auth0Id)
                 .username(finalUsername)
-                .email(email)
+                .email(email != null ? email : auth0Id + "@auth0.local") // Email fallback
                 .isAuth0User(true)
                 .password(null) // No password for Auth0 users
                 .roles(Set.of(userRole))
-                .emailNotificationsEnabled(true)
+                .emailNotificationsEnabled(email != null) // Solo habilitar si tiene email real
                 .build();
 
         User savedUser = userRepository.save(newUser);
