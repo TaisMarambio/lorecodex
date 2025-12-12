@@ -4,7 +4,7 @@ import com.lorecodex.backend.security.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,37 +40,14 @@ public class Auth0SecurityConfig {
     }
 
     @Bean
-    @Primary
+    @Order(1)
     public SecurityFilterChain auth0SecurityFilterChain(HttpSecurity http) throws Exception {
         http
+                .securityMatcher("/auth0/**", "/user/**", "/guides/**", "/challenges/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/games/**").permitAll()
-                        .requestMatchers("/reviews/**").permitAll()
-                        .requestMatchers("/rating/**").permitAll()
-                        .requestMatchers("/igdb/**").permitAll()
-                        .requestMatchers("/guides/all/**").permitAll()
-                        .requestMatchers("/guides/{id}").permitAll()
-                        .requestMatchers("/guides/search").permitAll()
-                        .requestMatchers("/lists/get-all").permitAll()
-                        .requestMatchers("/lists/{listId}/get-list").permitAll()
-                        .requestMatchers("/challenges").permitAll()
-                        .requestMatchers("/challenges/{id}").permitAll()
-                        .requestMatchers("/challenges/search").permitAll()
-                        .requestMatchers("/news").permitAll()
-                        .requestMatchers("/news/{id}").permitAll()
-                        .requestMatchers("/comments/guide/{guideId}").permitAll()
-                        .requestMatchers("/comments/news/{newsId}").permitAll()
-                        .requestMatchers("/test-email/**").permitAll()
-                        .requestMatchers("/user/profile/{userId}").permitAll()
-
-                        // Admin endpoints
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-
-                        // Authenticated endpoints
+                        .requestMatchers("/auth0/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
