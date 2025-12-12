@@ -30,50 +30,65 @@ public class Auth0Controller {
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null) {
-            return ResponseEntity.status(401).build();
+        try {
+            if (jwt == null) {
+                log.warn("Auth0 /me called without JWT");
+                return ResponseEntity.status(401).build();
+            }
+
+            String auth0Id = jwt.getSubject();
+            String email = jwt.getClaimAsString("email");
+            String name = jwt.getClaimAsString("name");
+            String nickname = jwt.getClaimAsString("nickname");
+
+            log.info("Auth0 user accessing /me - auth0Id: {}, email: {}", auth0Id, email);
+
+            User user = userRepository.findByAuth0Id(auth0Id)
+                    .orElseGet(() -> {
+                        log.info("Creating new user from Auth0: {} ({})", nickname, email);
+                        return createUserFromAuth0(auth0Id, email, name, nickname);
+                    });
+
+            return ResponseEntity.ok(userMapper.toDTO(user));
+        } catch (Exception e) {
+            log.error("Error in Auth0 /me endpoint", e);
+            return ResponseEntity.status(500).build();
         }
-
-        String auth0Id = jwt.getSubject();
-        String email = jwt.getClaimAsString("email");
-        String name = jwt.getClaimAsString("name");
-        String nickname = jwt.getClaimAsString("nickname");
-
-        log.info("Auth0 user accessing /me - auth0Id: {}, email: {}", auth0Id, email);
-
-        User user = userRepository.findByAuth0Id(auth0Id)
-                .orElseGet(() -> {
-                    log.info("Creating new user from Auth0: {}", email);
-                    return createUserFromAuth0(auth0Id, email, name, nickname);
-                });
-
-        return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> syncUser(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null) {
-            return ResponseEntity.status(401).build();
+        try {
+            if (jwt == null) {
+                log.warn("Auth0 /sync called without JWT");
+                return ResponseEntity.status(401).build();
+            }
+
+            String auth0Id = jwt.getSubject();
+            String email = jwt.getClaimAsString("email");
+            String name = jwt.getClaimAsString("name");
+            String nickname = jwt.getClaimAsString("nickname");
+
+            log.info("Syncing Auth0 user: {} ({})", nickname, email);
+
+            User user = userRepository.findByAuth0Id(auth0Id)
+                    .orElseGet(() -> createUserFromAuth0(auth0Id, email, name, nickname));
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", userMapper.toDTO(user));
+            response.put("message", "User synced successfully");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error in Auth0 /sync endpoint", e);
+            return ResponseEntity.status(500).build();
         }
-
-        String auth0Id = jwt.getSubject();
-        String email = jwt.getClaimAsString("email");
-        String name = jwt.getClaimAsString("name");
-        String nickname = jwt.getClaimAsString("nickname");
-
-        User user = userRepository.findByAuth0Id(auth0Id)
-                .orElseGet(() -> createUserFromAuth0(auth0Id, email, name, nickname));
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("user", userMapper.toDTO(user));
-        response.put("message", "User synced successfully");
-
-        return ResponseEntity.ok(response);
     }
 
     private User createUserFromAuth0(String auth0Id, String email, String name, String nickname) {
         // Validar que tengamos al menos un identificador
         if (email == null && nickname == null && name == null) {
+            log.error("Cannot create user: no email, nickname, or name provided by Auth0");
             throw new IllegalArgumentException("Cannot create user: no email, nickname, or name provided by Auth0");
         }
 
@@ -84,10 +99,11 @@ public class Auth0Controller {
         } else if (email != null && !email.trim().isEmpty()) {
             username = email.split("@")[0];
         } else if (name != null && !name.trim().isEmpty()) {
-            username = name.replaceAll("\\s+", "_"); // Reemplazar espacios con guiones bajos
+            username = name.replaceAll("\\s+", "_");
         } else {
             // Último recurso: usar una parte del auth0Id
-            username = "user_" + auth0Id.substring(auth0Id.lastIndexOf("|") + 1, Math.min(auth0Id.lastIndexOf("|") + 9, auth0Id.length()));
+            String idPart = auth0Id.substring(auth0Id.lastIndexOf("|") + 1);
+            username = "user_" + idPart.substring(0, Math.min(8, idPart.length()));
         }
 
         // Si el username ya existe, agregar un sufijo
@@ -105,10 +121,11 @@ public class Auth0Controller {
                     return roleRepository.save(new Role(null, "ROLE_USER", null));
                 });
 
+        // Crear el usuario
         User newUser = User.builder()
                 .auth0Id(auth0Id)
                 .username(finalUsername)
-                .email(email != null ? email : auth0Id + "@auth0.local") // Email fallback
+                .email(email != null ? email : auth0Id + "@auth0.local")
                 .isAuth0User(true)
                 .password(null) // No password for Auth0 users
                 .roles(Set.of(userRole))
