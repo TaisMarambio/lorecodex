@@ -33,8 +33,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-    // Auth0 dependencies
+// Auth0 dependencies
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'com.auth0:auth0-spring-security-api:1.5.3'
 
     compileOnly 'org.projectlombok:lombok'
