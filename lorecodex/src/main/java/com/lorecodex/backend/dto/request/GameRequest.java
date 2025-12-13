@@ -15,10 +15,10 @@ import lombok.Setter;
 public class GameRequest {
     private String title;
     private Double rating;
-    private String genre;
+    private String genre;  // Campo singular para compatibilidad
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
-    private Set<String> genres;
+    private Set<String> genres;  // Campo plural
     private Set<String> developersAndPublishers;
 }

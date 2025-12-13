@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -34,7 +35,18 @@ public class BatchGameServiceImpl implements BatchGameService {
 
         for (GameRequest gameRequest : request.getGames()) {
             try {
-                // Verificar si el juego ya existe por título
+                // Validar campos requeridos
+                if (gameRequest.getTitle() == null || gameRequest.getTitle().trim().isEmpty()) {
+                    results.add(BatchGameResponse.GameImportResult.builder()
+                            .title("Unknown")
+                            .success(false)
+                            .message("Title is required")
+                            .build());
+                    failureCount++;
+                    continue;
+                }
+
+                // Verificar si el juego ya existe
                 if (gameRepository.findByTitleIgnoreCase(gameRequest.getTitle()).isPresent()) {
                     results.add(BatchGameResponse.GameImportResult.builder()
                             .title(gameRequest.getTitle())
@@ -46,16 +58,26 @@ public class BatchGameServiceImpl implements BatchGameService {
                     continue;
                 }
 
-                // Crear y guardar el juego
-                Game game = gameMapper.toEntity(gameRequest);
+                // Crear el juego
+                Game game = new Game();
+                game.setTitle(gameRequest.getTitle());
+                game.setDescription(gameRequest.getDescription());
+                game.setCoverImage(gameRequest.getCoverImage());
+                game.setReleaseDate(gameRequest.getReleaseDate());
 
-                // Asegurar valores por defecto
-                if (game.getRating() == null) {
-                    game.setRating(0.0);
+                // Manejar géneros - convertir String a Set
+                if (gameRequest.getGenre() != null && !gameRequest.getGenre().trim().isEmpty()) {
+                    game.setGenres(new HashSet<>(List.of(gameRequest.getGenre())));
+                } else if (gameRequest.getGenres() != null && !gameRequest.getGenres().isEmpty()) {
+                    game.setGenres(gameRequest.getGenres());
+                } else {
+                    game.setGenres(new HashSet<>());
                 }
-                if (game.getLikes() == null) {
-                    game.setLikes(0);
-                }
+
+                // Valores por defecto obligatorios
+                game.setRating(0.0);
+                game.setLikes(0);
+                game.setDevelopersAndPublishers(new HashSet<>());
 
                 Game savedGame = gameRepository.save(game);
 
@@ -71,7 +93,7 @@ public class BatchGameServiceImpl implements BatchGameService {
 
             } catch (Exception e) {
                 results.add(BatchGameResponse.GameImportResult.builder()
-                        .title(gameRequest.getTitle())
+                        .title(gameRequest.getTitle() != null ? gameRequest.getTitle() : "Unknown")
                         .success(false)
                         .message("Error: " + e.getMessage())
                         .build());

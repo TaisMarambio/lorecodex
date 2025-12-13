@@ -61,6 +61,9 @@ public class SecurityConfig  {
                         .requestMatchers("/games/{id}").permitAll()
                         .requestMatchers("/games/{id}/like").permitAll()
 
+                        // BATCH IMPORT - IMPORTANTE: Debe ir ANTES de /games/**
+                        .requestMatchers("/games/batch/import").hasRole("ADMIN")
+
                         //GameNotes endpoints
                         .requestMatchers("/notes/**").authenticated()
 
