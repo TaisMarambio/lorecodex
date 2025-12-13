@@ -33,7 +33,7 @@ public class UserList {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") // columna que se relaciona con el usuario q va a crear la list
+    @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(
@@ -45,4 +45,7 @@ public class UserList {
     @Builder.Default
     private List<ListItem> items = new ArrayList<>();
 
+    @OneToMany(mappedBy = "userList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
 }

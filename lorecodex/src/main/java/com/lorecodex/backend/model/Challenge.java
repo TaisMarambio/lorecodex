@@ -44,6 +44,10 @@ public class Challenge {
     @Builder.Default
     private Set<ChallengeParticipation> participations = new HashSet<>();
 
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -3,8 +3,10 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
+import com.lorecodex.backend.dto.response.CommentResponse;
 import com.lorecodex.backend.dto.response.ListItemResponse;
 import com.lorecodex.backend.dto.response.UserListResponse;
+import com.lorecodex.backend.mapper.CommentMapper;
 import com.lorecodex.backend.model.ListItem;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserList;
@@ -31,6 +33,8 @@ public class UserListServiceImpl implements UserListService {
     private final GameRepository gameRepository;
     private final GuideRepository guideRepository;
     private final ChallengeRepository challengeRepository;
+    private final CommentMapper commentMapper;
+
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
@@ -147,6 +151,13 @@ public class UserListServiceImpl implements UserListService {
                 .map(this::toItemResponse)
                 .collect(Collectors.toList());
 
+        List<CommentResponse> commentDtos = list.getComments() != null
+                ? list.getComments().stream()
+                .filter(c -> c.getParent() == null)
+                .map(commentMapper::toResponse)
+                .collect(Collectors.toList())
+                : List.of();
+
         return UserListResponse.builder()
                 .id(list.getId())
                 .title(list.getTitle())
@@ -154,6 +165,7 @@ public class UserListServiceImpl implements UserListService {
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
                 .items(itemDtos)
+                .comments(commentDtos)
                 .build();
     }
 

@@ -15,4 +15,5 @@ public class UserListResponse {
     private LocalDateTime createdAt;
     private Long userId;
     private List<ListItemResponse> items;
+    private List<CommentResponse> comments;
 }

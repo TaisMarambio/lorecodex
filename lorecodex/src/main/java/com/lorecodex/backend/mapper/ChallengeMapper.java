@@ -8,14 +8,19 @@ import com.lorecodex.backend.model.Challenge;
 import com.lorecodex.backend.model.ChallengeItem;
 import com.lorecodex.backend.model.ChallengeParticipation;
 import com.lorecodex.backend.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Component
+@RequiredArgsConstructor
 public class ChallengeMapper {
+
+    private final CommentMapper commentMapper;
 
     public Challenge toEntity(ChallengeRequest req, User creator) {
         Challenge challenge = Challenge.builder()
@@ -48,6 +53,12 @@ public class ChallengeMapper {
                                 .order(item.getOrderPosition())
                                 .build())
                         .toList())
+                .comments(challenge.getComments() != null
+                        ? challenge.getComments().stream()
+                        .filter(c -> c.getParent() == null)
+                        .map(commentMapper::toResponse)
+                        .collect(Collectors.toList())
+                        : List.of())
                 .build();
     }
 

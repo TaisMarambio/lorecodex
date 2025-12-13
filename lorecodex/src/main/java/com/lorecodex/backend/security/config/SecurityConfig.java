@@ -94,8 +94,17 @@ public class SecurityConfig  {
                         //news
                         .requestMatchers("/news/**").permitAll()
 
+                        //notifications
                         .requestMatchers("/notifications/**").authenticated()
-                        .requestMatchers("/comments/**").permitAll()
+
+                        //comments - NUEVO
+                        .requestMatchers("/comments/guide/{guideId}").permitAll()  // GET público
+                        .requestMatchers("/comments/news/{newsId}").permitAll()    // GET público
+                        .requestMatchers("/comments/list/{listId}").permitAll()    // GET público
+                        .requestMatchers("/comments/challenge/{challengeId}").permitAll() // GET público
+                        .requestMatchers("/comments/**").authenticated()           // POST y DELETE requieren autenticación
+
+                        //settings
                         .requestMatchers("/test-email/**").permitAll()
                         .requestMatchers("settings/**").permitAll()
                 )

@@ -1,5 +1,6 @@
 package com.lorecodex.backend.dto.response.challenge;
 
+import com.lorecodex.backend.dto.response.CommentResponse;
 import lombok.*;
 
 import java.util.List;
@@ -16,4 +17,5 @@ public class ChallengeResponse {
     private String description;
     private String creatorUsername;
     private List<ChallengeItemDto> items;
+    private List<CommentResponse> comments;
 }
