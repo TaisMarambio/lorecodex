@@ -28,6 +28,8 @@ public class Auth0Controller {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
 
+    private static final String CLAIM_NAMESPACE = "https://api.lorecodex.com";
+
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         try {
@@ -37,11 +39,14 @@ public class Auth0Controller {
             }
 
             String auth0Id = jwt.getSubject();
-            String email = jwt.getClaimAsString("email");
-            String name = jwt.getClaimAsString("name");
-            String nickname = jwt.getClaimAsString("nickname");
 
-            log.info("Auth0 user accessing /me - auth0Id: {}, email: {}", auth0Id, email);
+            // Intentar obtener email de varias ubicaciones
+            String email = getEmailFromJwt(jwt);
+            String name = getNameFromJwt(jwt);
+            String nickname = getNicknameFromJwt(jwt);
+
+            log.info("Auth0 user accessing /me - auth0Id: {}, email: {}, name: {}, nickname: {}",
+                    auth0Id, email, name, nickname);
 
             User user = userRepository.findByAuth0Id(auth0Id)
                     .orElseGet(() -> {
@@ -65,9 +70,9 @@ public class Auth0Controller {
             }
 
             String auth0Id = jwt.getSubject();
-            String email = jwt.getClaimAsString("email");
-            String name = jwt.getClaimAsString("name");
-            String nickname = jwt.getClaimAsString("nickname");
+            String email = getEmailFromJwt(jwt);
+            String name = getNameFromJwt(jwt);
+            String nickname = getNicknameFromJwt(jwt);
 
             log.info("Syncing Auth0 user: {} ({})", nickname, email);
 
@@ -85,10 +90,56 @@ public class Auth0Controller {
         }
     }
 
+    // Métodos auxiliares para extraer claims
+    private String getEmailFromJwt(Jwt jwt) {
+        // Intentar claim estándar
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isEmpty()) {
+            return email;
+        }
+
+        // Intentar claim con namespace
+        email = jwt.getClaimAsString(CLAIM_NAMESPACE + "/email");
+        if (email != null && !email.isEmpty()) {
+            return email;
+        }
+
+        return null;
+    }
+
+    private String getNameFromJwt(Jwt jwt) {
+        String name = jwt.getClaimAsString("name");
+        if (name != null && !name.isEmpty()) {
+            return name;
+        }
+
+        name = jwt.getClaimAsString(CLAIM_NAMESPACE + "/name");
+        if (name != null && !name.isEmpty()) {
+            return name;
+        }
+
+        return null;
+    }
+
+    private String getNicknameFromJwt(Jwt jwt) {
+        String nickname = jwt.getClaimAsString("nickname");
+        if (nickname != null && !nickname.isEmpty()) {
+            return nickname;
+        }
+
+        nickname = jwt.getClaimAsString(CLAIM_NAMESPACE + "/nickname");
+        if (nickname != null && !nickname.isEmpty()) {
+            return nickname;
+        }
+
+        return null;
+    }
+
     private User createUserFromAuth0(String auth0Id, String email, String name, String nickname) {
         // Validar que tengamos al menos un identificador
         if (email == null && nickname == null && name == null) {
             log.error("Cannot create user: no email, nickname, or name provided by Auth0");
+            log.error("Auth0 ID: {}", auth0Id);
             throw new IllegalArgumentException("Cannot create user: no email, nickname, or name provided by Auth0");
         }
 
