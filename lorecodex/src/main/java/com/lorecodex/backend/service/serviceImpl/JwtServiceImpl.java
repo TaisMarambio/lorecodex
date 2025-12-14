@@ -25,7 +25,7 @@ public class JwtServiceImpl implements JwtService {
     @Value("${token.signing.key}")
     private String jwtSigningKey;
 
-    private static final long EXPIRATION_TIME_MS = 1000 * 60 * 60; //1 hora
+    private static final long EXPIRATION_TIME_MS = 1000 * 60 * 60 * 24; // 24 horas
 
     @Override
     public String generateToken(UserDetails userDetails) {
