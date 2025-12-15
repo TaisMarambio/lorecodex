@@ -33,7 +33,7 @@ public class ChallengeMapper {
         IntStream.range(0, req.getItems().size()).forEach(i ->
                 items.add(ChallengeItem.builder()
                         .description(req.getItems().get(i))
-                        .orderPosition(i)
+                        .orderPosition(i + 1) // Comenzar en 1, no en 0
                         .challenge(challenge)
                         .build()));
         challenge.setItems(items);
@@ -66,11 +66,18 @@ public class ChallengeMapper {
         int total = participation.getChallenge().getItems().size();
         int completed = participation.getCompletedItems().size();
         double progress = total == 0 ? 0 : (double) completed / total * 100.0;
+
+        // Extraer los IDs de los items completados
+        List<Long> completedItemIds = participation.getCompletedItems().stream()
+                .map(ChallengeItem::getId)
+                .collect(Collectors.toList());
+
         return ChallengeProgressDto.builder()
                 .challengeId(participation.getChallenge().getId())
                 .completed(completed)
                 .total(total)
                 .progress(progress)
+                .completedItemIds(completedItemIds)
                 .build();
     }
 }

@@ -12,6 +12,8 @@ public interface ChallengeService {
 
     void joinChallenge(Long challengeId, String username);
 
+    void leaveChallenge(Long challengeId, String username);
+
     ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username);
 
     ChallengeResponse getChallenge(Long challengeId, String username);
