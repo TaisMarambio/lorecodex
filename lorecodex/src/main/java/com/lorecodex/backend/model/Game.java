@@ -29,7 +29,7 @@ public class Game {
     private Double rating;
     private Integer likes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "game_genres", joinColumns = @JoinColumn(name = "game_id"))
     @Column(name = "genre")
     private Set<String> genres;
@@ -45,7 +45,7 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<UserRating> userRatings = new ArrayList<>();
 
     @Column(name = "igdb_id", unique = true)

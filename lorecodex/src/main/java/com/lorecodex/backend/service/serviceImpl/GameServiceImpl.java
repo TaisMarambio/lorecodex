@@ -9,9 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -112,11 +111,25 @@ public class GameServiceImpl implements GameService {
         newGame.setDescription(request.getDescription());
         newGame.setCoverImage(request.getCoverImage());
         newGame.setReleaseDate(request.getReleaseDate());
-        newGame.setRating(0.0); // o null, según tu lógica
+        newGame.setRating(0.0);
         newGame.setLikes(0);
         newGame.setGenres(request.getGenres());
         newGame.setDevelopersAndPublishers(new HashSet<>());
 
         return gameRepository.save(newGame);
+    }
+
+    @Override
+    public Set<String> getAllUniqueGenres() {
+        List<Game> allGames = gameRepository.findAll();
+        Set<String> uniqueGenres = new TreeSet<>(); // TreeSet para orden alfabético
+
+        for (Game game : allGames) {
+            if (game.getGenres() != null && !game.getGenres().isEmpty()) {
+                uniqueGenres.addAll(game.getGenres());
+            }
+        }
+
+        return uniqueGenres;
     }
 }

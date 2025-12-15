@@ -56,6 +56,12 @@ public class SecurityConfig  {
                         //.requestMatchers("/guides/published").permitAll()
                         //.requestMatchers("/guides/{id}").permitAll()
                         //.requestMatchers("/guides/**").hasRole("USER")
+
+                        // IMPORTANTE: Géneros ANTES de otros endpoints de games
+                        .requestMatchers("/games/genres").permitAll()
+                        .requestMatchers("/games/search").permitAll()
+                        .requestMatchers("/games/debug/**").permitAll()
+
                         .requestMatchers("/games").permitAll()
                         .requestMatchers("/games/allGames").permitAll()
                         .requestMatchers("/games/{id}").permitAll()

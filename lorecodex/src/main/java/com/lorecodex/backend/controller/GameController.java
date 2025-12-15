@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/games")
@@ -28,6 +28,13 @@ public class GameController {
     public GameController(GameService gameService, GameMapper gameMapper) {
         this.gameService = gameService;
         this.gameMapper = gameMapper;
+    }
+
+    // NUEVO: Endpoint para obtener todos los géneros únicos
+    @GetMapping("/genres")
+    public ResponseEntity<Set<String>> getAllGenres() {
+        Set<String> genres = gameService.getAllUniqueGenres();
+        return ResponseEntity.ok(genres);
     }
 
     // Endpoint con paginación
@@ -105,5 +112,24 @@ public class GameController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Game> games = gameService.findGamesByTitle(title, pageable);
         return ResponseEntity.ok(gameMapper.toDTOList(games.getContent()));
+    }
+
+    @GetMapping("/debug/{id}")
+    public ResponseEntity<Map<String, Object>> debugGame(@PathVariable Long id) {
+        Optional<Game> gameOpt = gameService.getGameById(id);
+        if (gameOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Game game = gameOpt.get();
+        Map<String, Object> debug = new HashMap<>();
+        debug.put("id", game.getId());
+        debug.put("title", game.getTitle());
+        debug.put("rating", game.getRating());
+        debug.put("genres", game.getGenres());
+        debug.put("userRatingsCount", game.getUserRatings() != null ? game.getUserRatings().size() : 0);
+        debug.put("userRatings", game.getUserRatings());
+
+        return ResponseEntity.ok(debug);
     }
 }

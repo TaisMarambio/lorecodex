@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface GameService {
     List<Game> getAllGames();
@@ -24,4 +25,7 @@ public interface GameService {
 
     Game incrementLikes(Long id);
     Game importGameFromIgdb(CreateGameFromIgdbRequest request);
+
+    // NUEVO: Obtener todos los géneros únicos de todos los juegos
+    Set<String> getAllUniqueGenres();
 }
