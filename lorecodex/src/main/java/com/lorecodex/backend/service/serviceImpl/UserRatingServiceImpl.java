@@ -52,7 +52,6 @@ public class UserRatingServiceImpl implements UserRatingService {
     }
 
     @Override
-    @Override
     @Transactional
     public void deleteRating(User user, Game game) {
         userRatingRepository.deleteByUserAndGame(user, game);
