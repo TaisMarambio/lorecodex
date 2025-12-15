@@ -85,10 +85,11 @@ public class Auth0JwtAuthenticationConverter implements Converter<Jwt, AbstractA
 
     private String normalizeRoleAuthority(String role) {
         String trimmed = role.trim();
+        String upper = trimmed.toUpperCase();
         if (trimmed.startsWith("ROLE_")) {
-            return trimmed;
+            return upper.startsWith("ROLE_") ? upper : "ROLE_" + upper;
         }
-        return "ROLE_" + trimmed;
+        return "ROLE_" + upper;
     }
 
     private List<String> claimAsStringList(Jwt jwt, String claimNames) {

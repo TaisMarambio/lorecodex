@@ -130,7 +130,7 @@ public class GameReviewController {
     // ------------------------ Admin ------------------------
 
     @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReviewResponse>> getAllReviewsAdmin() {
         List<Review> reviews = reviewService.getAllReviews();
         return ResponseEntity.ok(reviewMapper.toDTOList(reviews));

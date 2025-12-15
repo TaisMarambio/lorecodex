@@ -57,7 +57,7 @@ public class GameController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GameDetailResponse> createGame(@RequestBody GameRequest gameRequest) {
         Game game = gameMapper.toEntity(gameRequest);
         Game savedGame = gameService.createGame(game);
@@ -67,7 +67,7 @@ public class GameController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GameDetailResponse> updateGame(
             @PathVariable Long id,
             @RequestBody GameRequest gameRequest) {
@@ -81,7 +81,7 @@ public class GameController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
         if (gameService.getGameById(id).isPresent()) {
             gameService.deleteGame(id);

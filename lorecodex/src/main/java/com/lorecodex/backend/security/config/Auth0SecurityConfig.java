@@ -2,13 +2,12 @@ package com.lorecodex.backend.security.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
-import com.lorecodex.backend.repository.UserRepository;
-import com.lorecodex.backend.security.auth0.AudienceValidator;
-import com.lorecodex.backend.security.auth0.Auth0JwtAuthenticationConverter;
-import com.lorecodex.backend.security.auth0.Auth0Properties;
+import java.time.Duration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.Cache;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,6 +25,12 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.lorecodex.backend.repository.UserRepository;
+import com.lorecodex.backend.security.auth0.AudienceValidator;
+import com.lorecodex.backend.security.auth0.Auth0JwtAuthenticationConverter;
+import com.lorecodex.backend.security.auth0.Auth0Properties;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -40,39 +45,43 @@ public class Auth0SecurityConfig {
             JwtDecoder jwtDecoder,
             Auth0JwtAuthenticationConverter jwtAuthenticationConverter
     ) throws Exception {
+
         http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Keep existing public routes
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/user/**").permitAll()
-                        .requestMatchers("/games").permitAll()
-                        .requestMatchers("/games/allGames").permitAll()
-                        .requestMatchers("/games/{id}").permitAll()
-                        .requestMatchers("/games/{id}/like").permitAll()
-                        .requestMatchers("/games/{id}/average-rating").permitAll()
-                        .requestMatchers("/reviews/**").permitAll()
-                        .requestMatchers("/rating/**").permitAll()
-                        .requestMatchers("/igdb/**").permitAll()
-                        .requestMatchers("/lists/**").permitAll()
-                        .requestMatchers("/guides/**").permitAll()
-                        .requestMatchers("/challenges/**").permitAll()
-                        .requestMatchers("/news/**").permitAll()
-                        .requestMatchers("/comments/**").permitAll()
-                        .requestMatchers("/test-email/**").permitAll()
-                        .requestMatchers("/settings/**").permitAll()
+                                // Public routes
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/user/**").permitAll()
+                                .requestMatchers("/games").permitAll()
+                                .requestMatchers("/games/allGames").permitAll()
+                                .requestMatchers("/games/{id}").permitAll()
+                                .requestMatchers("/games/{id}/like").permitAll()
+                                .requestMatchers("/games/{id}/average-rating").permitAll()
+                                .requestMatchers("/reviews/**").permitAll()
+                                .requestMatchers("/rating/**").permitAll()
+                                .requestMatchers("/igdb/**").permitAll()
+                                .requestMatchers("/lists/**").permitAll()
+                                .requestMatchers("/guides/**").permitAll()
+                                .requestMatchers("/challenges/**").permitAll()
+                                .requestMatchers("/news/**").permitAll()
+                                .requestMatchers("/comments/**").permitAll()
+                                .requestMatchers("/test-email/**").permitAll()
+                                .requestMatchers("/settings/**").permitAll()
 
-                        // Protected routes
-                        .requestMatchers("/admin/games").hasRole("ADMIN")
-                        .requestMatchers("/admin/games/**").hasRole("ADMIN")
-                        .requestMatchers("/games/batch/import").hasRole("ADMIN")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/notes/**").authenticated()
-                        .requestMatchers("/follow/**").authenticated()
-                        .requestMatchers("/notifications/**").authenticated()
+                                // Protected routes
+                                .requestMatchers("/admin/games").hasRole("ADMIN")
+                                .requestMatchers("/admin/games/**").hasRole("ADMIN")
+                                .requestMatchers("/games/batch/import").hasRole("ADMIN")
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/notes/**").authenticated()
+                                .requestMatchers("/follow/**").authenticated()
+                                .requestMatchers("/notifications/**").authenticated()
+
+                        // Everything else: require auth (opcional, pero recomendable)
+                        // .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
@@ -89,7 +98,17 @@ public class Auth0SecurityConfig {
         String issuer = StringOrDefault.firstNonBlank(properties.issuerUri(), defaultIssuer(properties.domain()));
         String jwksUri = StringOrDefault.firstNonBlank(properties.jwksUri(), defaultJwks(properties.domain()));
 
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
+        Cache jwkCache = new CaffeineCache(
+                "jwks",
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(10))
+                        .maximumSize(1)
+                        .build()
+        );
+
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwksUri)
+                .cache(jwkCache)
+                .build();
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(properties.audience());
