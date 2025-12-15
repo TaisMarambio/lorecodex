@@ -6,6 +6,7 @@ import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +52,8 @@ public class UserRatingServiceImpl implements UserRatingService {
     }
 
     @Override
+    @Override
+    @Transactional
     public void deleteRating(User user, Game game) {
         userRatingRepository.deleteByUserAndGame(user, game);
     }
