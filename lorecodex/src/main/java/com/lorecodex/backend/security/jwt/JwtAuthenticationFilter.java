@@ -2,7 +2,6 @@ package com.lorecodex.backend.security.jwt;
 
 import com.lorecodex.backend.service.JwtService;
 import com.lorecodex.backend.service.UserService;
-import com.lorecodex.backend.service.serviceImpl.JwtServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
