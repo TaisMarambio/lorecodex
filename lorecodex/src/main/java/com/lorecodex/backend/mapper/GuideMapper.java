@@ -23,6 +23,14 @@ public class GuideMapper {
         response.setPublished(guide.isPublished());
         response.setDraft(guide.isDraft());
 
+        // CORREGIDO: Asegurar que userId se mapee correctamente
+        if (guide.getUser() != null) {
+            response.setUserId(guide.getUser().getId());
+        }
+
+        // CORREGIDO: Asegurar que likeCount nunca sea null
+        response.setLikeCount(guide.getLikedBy() != null ? guide.getLikedBy().size() : 0);
+
         if (guide.getImages() != null) {
             List<GuideImageResponse> images = guide.getImages().stream().map(img -> {
                 GuideImageResponse res = new GuideImageResponse();

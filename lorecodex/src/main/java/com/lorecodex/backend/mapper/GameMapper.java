@@ -23,15 +23,31 @@ public class GameMapper {
             return null;
         }
 
+        // Calcular la cantidad de ratings
+        Integer ratingCount = (game.getUserRatings() != null)
+                ? game.getUserRatings().size()
+                : 0;
+
+        // Calcular el promedio de ratings real
+        Double averageRating = 0.0;
+        if (game.getUserRatings() != null && !game.getUserRatings().isEmpty()) {
+            double sum = game.getUserRatings().stream()
+                    .mapToDouble(ur -> ur.getRating())
+                    .sum();
+            averageRating = sum / game.getUserRatings().size();
+        }
+
         return GameDetailResponse.builder()
                 .id(game.getId())
                 .title(game.getTitle())
                 .description(game.getDescription())
                 .coverImage(upgradeCoverImage(game.getCoverImage()))
                 .releaseDate(game.getReleaseDate())
+                .rating(averageRating) // Usar el promedio calculado
                 .createdAt(game.getCreatedAt())
                 .rating(game.getRating())
                 .likes(game.getLikes())
+                .ratingCount(ratingCount)
                 .genres(game.getGenres())
                 .developersAndPublishers(game.getDevelopersAndPublishers())
                 .tags(game.getTags())

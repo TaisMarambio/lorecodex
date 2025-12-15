@@ -1,3 +1,4 @@
+// lorecodex/src/main/java/com/lorecodex/backend/service/serviceImpl/UserListServiceImpl.java
 package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.dto.request.ListItemRequest;
@@ -29,12 +30,10 @@ public class UserListServiceImpl implements UserListService {
     private final UserListRepository userListRepository;
     private final ListItemRepository listItemRepository;
     private final UserRepository userRepository;
-
     private final GameRepository gameRepository;
     private final GuideRepository guideRepository;
     private final ChallengeRepository challengeRepository;
     private final CommentMapper commentMapper;
-
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
@@ -61,10 +60,8 @@ public class UserListServiceImpl implements UserListService {
     @Override
     public UserListResponse updateList(Long listId, UserListRequest request) {
         UserList list = getUserListByIdOrThrow(listId);
-
         list.setTitle(request.getTitle());
         list.setDescription(request.getDescription());
-
         return toResponse(userListRepository.save(list));
     }
 
@@ -164,6 +161,7 @@ public class UserListServiceImpl implements UserListService {
                 .description(list.getDescription())
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
+                .username(list.getUser().getUsername()) // ← AÑADIDO
                 .items(itemDtos)
                 .comments(commentDtos)
                 .build();
@@ -176,7 +174,6 @@ public class UserListServiceImpl implements UserListService {
         dto.setReferenceId(item.getReferenceId());
         dto.setPosition(item.getPosition());
 
-        // Cargamos y enriquecemos según tipo
         switch (item.getType()) {
             case GAME -> {
                 gameRepository.findById(item.getReferenceId()).ifPresent(g -> {
@@ -193,7 +190,6 @@ public class UserListServiceImpl implements UserListService {
             case CHALLENGE -> {
                 challengeRepository.findById(item.getReferenceId()).ifPresent(ch -> {
                     dto.setTitle(ch.getTitle());
-                    // si tienes alguna imagen para challenges, úsala; si no, puedes dejar null
                 });
             }
         }

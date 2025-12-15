@@ -20,8 +20,8 @@ public class GuideResponse {
     private boolean isPublished;
     private boolean isDraft;
     private Set<String> tags;
-    private Long userId;
-    private Long gameId; // Add this field
+    private Long userId;       // CORREGIDO: userId en lugar de solo gameId
+    private Long gameId;       // Mantener para compatibilidad
     private int likeCount;
     private List<CommentResponse> comments;
     private List<GuideImageResponse> images;

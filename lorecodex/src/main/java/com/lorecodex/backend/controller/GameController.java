@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/games")
@@ -33,7 +33,12 @@ public class GameController {
         this.gameMapper = gameMapper;
     }
 
-    // Endpoint con paginación
+    @GetMapping("/genres")
+    public ResponseEntity<Set<String>> getAllGenres() {
+        Set<String> genres = gameService.getAllUniqueGenres();
+        return ResponseEntity.ok(genres);
+    }
+
     @GetMapping("/allGames")
     public ResponseEntity<PagedResponse<GameDetailResponse>> getAllGames(
             @RequestParam(required = false) String title,

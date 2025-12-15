@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ public class GuideController {
     private final GuideService guideService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<GuideResponse> createGuide(
             @RequestBody GuideRequest request,
             @AuthenticationPrincipal User user
@@ -33,6 +35,7 @@ public class GuideController {
     }
 
     @PostMapping("/{guideId}/upload-cover")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<String> uploadCover(
             @PathVariable Long guideId,
             @RequestParam("file") MultipartFile file
@@ -67,6 +70,7 @@ public class GuideController {
     }
 
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<GuideResponse> updateGuide(
             @PathVariable Long id,
             @RequestBody GuideRequest request,
@@ -76,13 +80,30 @@ public class GuideController {
         return ResponseEntity.ok(updated);
     }
 
+    // CORREGIDO: Ahora los admins pueden eliminar cualquier guía
     @DeleteMapping("/deleteGuide/{id}")
-    public ResponseEntity<Void> deleteGuide(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteGuide(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        // Validar que sea el autor o admin
+        GuideResponse guide = guideService.getGuide(id);
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isAuthor = guide.getUserId().equals(user.getId());
+
+        if (!isAdmin && !isAuthor) {
+            return ResponseEntity.status(403).build();
+        }
+
         guideService.deleteGuide(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/like")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Void> likeGuide(
             @PathVariable Long id,
             @AuthenticationPrincipal User user
@@ -92,24 +113,66 @@ public class GuideController {
     }
 
     @PostMapping("/{id}/publish")
-    public ResponseEntity<GuideResponse> publishGuide(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<GuideResponse> publishGuide(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        // Validar que sea el autor o admin
+        GuideResponse guide = guideService.getGuide(id);
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isAuthor = guide.getUserId().equals(user.getId());
+
+        if (!isAdmin && !isAuthor) {
+            return ResponseEntity.status(403).build();
+        }
+
         return guideService.publishGuide(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/unpublish")
-    public ResponseEntity<GuideResponse> unpublishGuide(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<GuideResponse> unpublishGuide(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        // Validar que sea el autor o admin
+        GuideResponse guide = guideService.getGuide(id);
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isAuthor = guide.getUserId().equals(user.getId());
+
+        if (!isAdmin && !isAuthor) {
+            return ResponseEntity.status(403).build();
+        }
+
         return guideService.unpublishGuide(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{id}/drafts")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<GuideResponse>> getDraftsByUserId(
             @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+
+        // Solo el usuario puede ver sus propios drafts (o admin)
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!currentUser.getId().equals(id) && !isAdmin) {
+            return ResponseEntity.status(403).build();
+        }
 
         Pageable pageable = PageRequest.of(page, size);
         Page<GuideResponse> draftsPage = guideService.getDraftsByUserIdPaginated(id, pageable);

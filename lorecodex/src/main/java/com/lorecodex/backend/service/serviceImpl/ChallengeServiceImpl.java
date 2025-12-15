@@ -21,10 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @Transactional
@@ -68,6 +66,18 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
+    public void leaveChallenge(Long challengeId, String username) {
+        ChallengeParticipation participation =
+                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+
+        if (participation == null) {
+            throw new IllegalStateException("User has not joined this challenge");
+        }
+
+        participationRepository.delete(participation);
+    }
+
+    @Override
     @Transactional
     public ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username) {
         ChallengeParticipation participation =
@@ -89,8 +99,10 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (participation.getCompletedItems().size() ==
                 participation.getChallenge().getItems().size()) {
             participation.setCompletedAt(LocalDateTime.now());
+            participation.setCompleted(true);
         } else {
             participation.setCompletedAt(null);
+            participation.setCompleted(false);
         }
 
         participationRepository.save(participation);
@@ -142,6 +154,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             challenge.getItems().add(it);
         }
 
+        challengeRepository.save(challenge);
         return mapper.toDto(challenge);
     }
 
@@ -150,11 +163,18 @@ public class ChallengeServiceImpl implements ChallengeService {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
 
-        if (!challenge.getCreator().getUsername().equals(username)) {
-            throw new IllegalStateException("Only the creator can delete the challenge");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isOwner = challenge.getCreator().getUsername().equals(username);
+
+        if (!isOwner && !isAdmin) {
+            throw new IllegalStateException("Only the creator or an admin can delete the challenge");
         }
 
-        participationRepository.deleteById(challengeId);
         challengeRepository.delete(challenge);
     }
 
@@ -196,6 +216,7 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (participation.getCompletedItems().size() <
                 participation.getChallenge().getItems().size()) {
             participation.setCompletedAt(null);
+            participation.setCompleted(false);
         }
 
         participationRepository.save(participation);

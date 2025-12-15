@@ -31,7 +31,7 @@ public class Game {
     private Double rating;
     private Integer likes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "game_genres", joinColumns = @JoinColumn(name = "game_id"))
     @Column(name = "genre")
     private Set<String> genres = new HashSet<>();
@@ -52,11 +52,11 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Guide> guides = new ArrayList<>();
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review> reviews = new ArrayList<>();
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<UserRating> userRatings = new ArrayList<>();
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserRating> userRatings = new ArrayList<>();
+    private List<GameNote> gameNotes = new ArrayList<>();
 
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;

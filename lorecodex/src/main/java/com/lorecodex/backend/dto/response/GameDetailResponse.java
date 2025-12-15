@@ -23,6 +23,7 @@ public class GameDetailResponse {
     @JsonProperty("averageRating")
     private Double rating;
     private Integer likes;
+    private Integer ratingCount; // NUEVO: Cantidad de ratings recibidos
     private Set<String> genres;
     private Set<String> developersAndPublishers;
     private Set<String> tags;
