@@ -1,3 +1,4 @@
+// lorecodex/src/main/java/com/lorecodex/backend/dto/response/UserListResponse.java
 package com.lorecodex.backend.dto.response;
 
 import lombok.Builder;
@@ -14,6 +15,7 @@ public class UserListResponse {
     private String description;
     private LocalDateTime createdAt;
     private Long userId;
+    private String username; // ← AÑADIDO
     private List<ListItemResponse> items;
     private List<CommentResponse> comments;
 }

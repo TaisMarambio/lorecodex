@@ -23,7 +23,8 @@ public class UserListController {
             @PathVariable Long userId,
             @RequestBody UserListRequest request
     ) {
-        return ResponseEntity.ok(userListService.createList(userId, request));
+        UserListResponse response = userListService.createList(userId, request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}/get-lists")
@@ -34,7 +35,6 @@ public class UserListController {
 
         List<UserListResponse> allLists = userListService.getListsForUser(userId);
 
-        // Paginación manual
         int fromIndex = page * size;
         int toIndex = Math.min(fromIndex + size, allLists.size());
 
@@ -52,7 +52,6 @@ public class UserListController {
 
         List<UserListResponse> allLists = userListService.getAllLists();
 
-        // Paginación manual
         int fromIndex = page * size;
         int toIndex = Math.min(fromIndex + size, allLists.size());
 
@@ -112,7 +111,6 @@ public class UserListController {
     @GetMapping("/{listId}/author")
     public ResponseEntity<String> getListAuthor(@PathVariable Long listId) {
         UserListResponse list = userListService.getListById(listId);
-        // Assuming you want to return the username from the list
-        return ResponseEntity.ok("User ID: " + list.getUserId());
+        return ResponseEntity.ok(list.getUsername());
     }
 }
