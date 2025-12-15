@@ -12,11 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-
 @Service
 public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
+    private static final int POPULAR_LIKES_THRESHOLD = 1_000;
+    private static final String POPULAR_TAG = "Popular";
 
     @Autowired
     public GameServiceImpl(GameRepository gameRepository) {
@@ -46,6 +47,8 @@ public class GameServiceImpl implements GameService {
         if (game.getLikes() == null) {
             game.setLikes(0);
         }
+        ensureTagCollection(game);
+        updatePopularTag(game);
         return gameRepository.save(game);
     }
 
@@ -92,10 +95,16 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Page<Game> findGamesByTag(String tag, Pageable pageable) {
+        return gameRepository.findByTagsContainingIgnoreCase(tag, pageable);
+    }
+
+    @Override
     public Game incrementLikes(Long id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
         game.setLikes(game.getLikes() + 1);
+        updatePopularTag(game);
         return gameRepository.save(game);
     }
 
@@ -116,7 +125,24 @@ public class GameServiceImpl implements GameService {
         newGame.setLikes(0);
         newGame.setGenres(request.getGenres());
         newGame.setDevelopersAndPublishers(new HashSet<>());
+        ensureTagCollection(newGame);
+        updatePopularTag(newGame);
 
         return gameRepository.save(newGame);
+    }
+
+    private void ensureTagCollection(Game game) {
+        if (game.getTags() == null) {
+            game.setTags(new HashSet<>());
+        }
+    }
+
+    private void updatePopularTag(Game game) {
+        ensureTagCollection(game);
+        if (game.getLikes() >= POPULAR_LIKES_THRESHOLD) {
+            game.getTags().add(POPULAR_TAG);
+        } else {
+            game.getTags().remove(POPULAR_TAG);
+        }
     }
 }

@@ -5,6 +5,8 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,12 +34,20 @@ public class Game {
     @ElementCollection
     @CollectionTable(name = "game_genres", joinColumns = @JoinColumn(name = "game_id"))
     @Column(name = "genre")
-    private Set<String> genres;
+    private Set<String> genres = new HashSet<>();
 
     @ElementCollection
     @CollectionTable(name = "game_devs_and_publishers", joinColumns = @JoinColumn(name = "game_id"))
     @Column(name = "developer_and_publisher")
-    private Set<String> developersAndPublishers;
+    private Set<String> developersAndPublishers = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "game_tags", joinColumns = @JoinColumn(name = "game_id"))
+    @Column(name = "tag")
+    private Set<String> tags = new HashSet<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Guide> guides = new ArrayList<>();
@@ -50,4 +60,11 @@ public class Game {
 
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
+
+    @PrePersist
+    private void setCreationTimestamp() {
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
+    }
 }

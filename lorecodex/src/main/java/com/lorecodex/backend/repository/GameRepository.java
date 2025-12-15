@@ -21,4 +21,5 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     Optional<Game> findByTitleIgnoreCase(String title);
     Optional<Game> findByIgdbId(Long igdbId);
+    Page<Game> findByTagsContainingIgnoreCase(String tag, Pageable pageable);
 }

@@ -1,5 +1,7 @@
 package com.lorecodex.backend.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -15,5 +17,10 @@ public class GameSearchResponse {
     private String title;
     private String coverImage;
     private LocalDate releaseDate;
+    private String description;
     private Set<String> genres;
+    private Set<String> tags;
+    private String playerCount;
+    @JsonProperty("averageRating")
+    private Double rating;
 }

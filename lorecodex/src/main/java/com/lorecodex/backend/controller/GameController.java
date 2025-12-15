@@ -2,6 +2,7 @@ package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.GameRequest;
 import com.lorecodex.backend.dto.response.GameDetailResponse;
+import com.lorecodex.backend.dto.response.PagedResponse;
 import com.lorecodex.backend.mapper.GameMapper;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.service.GameService;
@@ -9,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,22 +35,56 @@ public class GameController {
 
     // Endpoint con paginación
     @GetMapping("/allGames")
-    public ResponseEntity<List<GameDetailResponse>> getAllGames(
+    public ResponseEntity<PagedResponse<GameDetailResponse>> getAllGames(
             @RequestParam(required = false) String title,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false, defaultValue = "0") String page,
+            @RequestParam(required = false, defaultValue = "12") String size,
+            @RequestParam(required = false, defaultValue = "rating,desc") String sort) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        int safePage = parsePage(page, 0);
+        int safeSize = Math.max(1, parsePage(size, 12));
+        Sort sortSpec = parseSort(sort);
+        Pageable pageable = PageRequest.of(safePage, safeSize, sortSpec);
         Page<Game> gamesPage;
 
-        if (title != null && !title.isEmpty()) {
+        if (StringUtils.hasText(tag)) {
+            gamesPage = gameService.findGamesByTag(tag, pageable);
+        } else if (StringUtils.hasText(title)) {
             gamesPage = gameService.findGamesByTitle(title, pageable);
         } else {
             gamesPage = gameService.getAllGamesPaginated(pageable);
         }
 
-        return ResponseEntity.ok(gameMapper.toDTOList(gamesPage.getContent()));
+        return ResponseEntity.ok(PagedResponse.from(gamesPage, gameMapper.toDTOList(gamesPage.getContent())));
     }
+
+    private int parsePage(String raw, int fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private Sort parseSort(String rawSort) {
+        if (!StringUtils.hasText(rawSort)) {
+            return Sort.by(Sort.Direction.DESC, "rating");
+        }
+        String[] parts = rawSort.split(",");
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (parts.length > 1 && parts[1].equalsIgnoreCase("asc")) {
+            direction = Sort.Direction.ASC;
+        }
+        String property = parts[0].trim();
+        if (property.isEmpty()) {
+            property = "rating";
+        }
+        return Sort.by(direction, property);
+        }
 
     @GetMapping("/{id}")
     public ResponseEntity<GameDetailResponse> getGameById(@PathVariable Long id) {

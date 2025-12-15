@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IgdbService {
-    String getTopGames();
-    List<IgdbGameResponse> searchGames(String query);
+    List<IgdbGameResponse> getTopGames(int page, int size);
+    List<IgdbGameResponse> searchGames(String query, int page, int size);
     Game importGameFromIgdb(CreateGameFromIgdbRequest request);
     Optional<IgdbGameResponse> getGameById(Long igdbId);
     Optional<Game> importGameById(Long igdbId);

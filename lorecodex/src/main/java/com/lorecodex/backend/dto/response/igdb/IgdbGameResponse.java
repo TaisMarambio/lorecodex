@@ -26,6 +26,7 @@ public class IgdbGameResponse {
 
     @JsonProperty("involved_companies")
     private List<InvolvedCompanyResponse> involvedCompanies;
+    private List<KeywordResponse> keywords;
 }
 
 

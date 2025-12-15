@@ -20,5 +20,6 @@ public class GameRequest {
     private String coverImage;
     private LocalDate releaseDate;
     private Set<String> genres;  // Campo plural
+    private Set<String> tags;
     private Set<String> developersAndPublishers;
 }

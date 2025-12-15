@@ -5,6 +5,8 @@ import com.lorecodex.backend.dto.response.GameSearchResponse;
 import com.lorecodex.backend.dto.response.igdb.GenreResponse;
 import com.lorecodex.backend.dto.response.igdb.IgdbGameResponse;
 import com.lorecodex.backend.dto.response.igdb.ReleaseDateResponse;
+import com.lorecodex.backend.util.PlayerCountFormatter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -15,22 +17,26 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class IgdbGameMapper {
+
+    private final PlayerCountFormatter playerCountFormatter;
 
     public GameSearchResponse toSearchDto(IgdbGameResponse igdbGame) {
         return GameSearchResponse.builder()
                 .igdbId(igdbGame.getIgdbId())
                 .title(igdbGame.getName())
-                .coverImage(
-                        igdbGame.getCover() != null
-                                ? "https:" + igdbGame.getCover().getUrl()
-                                : null)
+                .coverImage(upgradeCoverImage(igdbGame.getCover() != null ? igdbGame.getCover().getUrl() : null))
                 .releaseDate(getFirstReleaseDate(igdbGame))
+                .description(igdbGame.getSummary())
+                .rating(igdbGame.getRating())
                 .genres(igdbGame.getGenres() != null
                         ? igdbGame.getGenres().stream()
                         .map(GenreResponse::getName)
                         .collect(Collectors.toSet())
                         : Set.of())
+                .playerCount(playerCountFormatter.format(null))
+                .tags(extractKeywords(igdbGame))
                 .build();
     }
 
@@ -40,11 +46,7 @@ public class IgdbGameMapper {
                 .title(igdbGame.getName())
                 .description(igdbGame.getSummary())
                 .rating(igdbGame.getRating())
-                .coverImage(
-                        igdbGame.getCover() != null
-                                ? "https:" + igdbGame.getCover().getUrl()
-                                : null
-                )
+                .coverImage(upgradeCoverImage(igdbGame.getCover() != null ? igdbGame.getCover().getUrl() : null))
                 .releaseDate(getFirstReleaseDate(igdbGame))
                 .genres(igdbGame.getGenres() != null
                         ? igdbGame.getGenres().stream()
@@ -56,8 +58,8 @@ public class IgdbGameMapper {
                         .map(ic -> ic.getCompany().getName())
                         .collect(Collectors.toSet())
                         : Set.of())
-                .rating(null)
-                .likes(null)
+                .playerCount(playerCountFormatter.format(null))
+                .tags(extractKeywords(igdbGame))
                 .build();
     }
 
@@ -74,6 +76,25 @@ public class IgdbGameMapper {
                         .toLocalDate())
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String upgradeCoverImage(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+        String safeUrl = path.startsWith("http") ? path : "https:" + path;
+        return safeUrl.replace("t_thumb", "t_cover_big");
+    }
+
+    private Set<String> extractKeywords(IgdbGameResponse igdbGame) {
+        if (igdbGame.getKeywords() == null) {
+            return Set.of();
+        }
+
+        return igdbGame.getKeywords().stream()
+                .map(keyword -> keyword.getName())
+                .filter(name -> name != null && !name.isBlank())
+                .collect(Collectors.toSet());
     }
 
 }

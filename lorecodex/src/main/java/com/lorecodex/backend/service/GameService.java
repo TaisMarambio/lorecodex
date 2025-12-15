@@ -24,4 +24,5 @@ public interface GameService {
 
     Game incrementLikes(Long id);
     Game importGameFromIgdb(CreateGameFromIgdbRequest request);
+    Page<Game> findGamesByTag(String tag, Pageable pageable);
 }
