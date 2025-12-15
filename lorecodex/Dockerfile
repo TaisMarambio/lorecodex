@@ -1,25 +1,24 @@
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jdk AS build
 
-# Configuramos el directorio de trabajo dentro del contenedor
-WORKDIR /app
+WORKDIR /workspace
 
-# Copiamos los archivos de Gradle y el código fuente
-COPY build.gradle settings.gradle gradlew ./
+# Gradle wrapper + build scripts (mejor cache)
+COPY gradlew build.gradle settings.gradle ./
 COPY gradle gradle
-COPY src src
-COPY .envEmpty .env
-
-# Damos permisos al script de Gradle Wrapper y construimos la aplicación
 RUN chmod +x ./gradlew
-RUN ./gradlew build -x test
 
-# Copiamos el JAR generado
-COPY build/libs/*.jar app.jar
+# Source
+COPY src src
 
-ENV JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+# Build (tests off by default in Docker build)
+RUN ./gradlew bootJar -x test
 
-# Exponemos el puerto (asegúrate de que coincida con el de tu aplicación)
-EXPOSE 8080 5005
+FROM eclipse-temurin:21-jre
 
-# Comando para ejecutar el servicio
-ENTRYPOINT ["java", "-jar", "app.jar"]
+WORKDIR /app
+COPY --from=build /workspace/build/libs/*.jar /app/app.jar
+
+# App listens on APP_PORT (default 8081)
+EXPOSE 8081
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

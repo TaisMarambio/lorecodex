@@ -10,6 +10,8 @@ import com.lorecodex.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,11 +31,20 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user, Authentication authentication) {
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(userMapper.toDTO(user));
+
+        UserResponse dto = userMapper.toDTO(user);
+        if ((dto.getRoles() == null || dto.getRoles().isEmpty()) && authentication != null) {
+            List<String> roles = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .filter(a -> a.startsWith("ROLE_"))
+                    .toList();
+            dto.setRoles(roles);
+        }
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/my-drafts")

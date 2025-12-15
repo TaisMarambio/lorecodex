@@ -1,0 +1,16 @@
+.gradle
+build
+out
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+.env
+.env.*
+!.env.example
+!.envEmpty
+
+**/node_modules
+**/dist

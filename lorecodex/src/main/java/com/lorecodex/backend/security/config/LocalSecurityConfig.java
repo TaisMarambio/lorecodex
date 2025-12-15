@@ -1,11 +1,11 @@
 package com.lorecodex.backend.security.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import com.lorecodex.backend.security.jwt.JwtAuthenticationFilter;
 import com.lorecodex.backend.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,36 +16,32 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@ConditionalOnProperty(name = "security.auth.provider", havingValue = "local", matchIfMissing = true)
 @RequiredArgsConstructor
-public class SecurityConfig  {
+public class LocalSecurityConfig  {
 
-    private JwtAuthenticationFilter filter;
-    private UserService userService;
-
-    @Autowired
-    public SecurityConfig(JwtAuthenticationFilter filter, UserService userService) {
-        this.userService = userService;
-        this.filter = filter;
-    }
+    private final JwtAuthenticationFilter filter;
+    private final UserService userService;
+    private final CorsConfigurationSource corsConfigurationSource;
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(withDefaults()) // Allow CORS
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Frontend compatibility endpoints
                         .requestMatchers("/admin/games").hasRole("ADMIN")
                         .requestMatchers("/admin/games/**").hasRole("ADMIN")
@@ -94,19 +90,10 @@ public class SecurityConfig  {
                         //news
                         .requestMatchers("/news/**").permitAll()
 
-                        //notifications
                         .requestMatchers("/notifications/**").authenticated()
-
-                        //comments - NUEVO
-                        .requestMatchers("/comments/guide/{guideId}").permitAll()  // GET público
-                        .requestMatchers("/comments/news/{newsId}").permitAll()    // GET público
-                        .requestMatchers("/comments/list/{listId}").permitAll()    // GET público
-                        .requestMatchers("/comments/challenge/{challengeId}").permitAll() // GET público
-                        .requestMatchers("/comments/**").authenticated()           // POST y DELETE requieren autenticación
-
-                        //settings
+                        .requestMatchers("/comments/**").permitAll()
                         .requestMatchers("/test-email/**").permitAll()
-                        .requestMatchers("settings/**").permitAll()
+                        .requestMatchers("/settings/**").permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -115,28 +102,17 @@ public class SecurityConfig  {
     }
 
     @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
-        config.addAllowedOriginPattern("*");
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:5173");
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
 

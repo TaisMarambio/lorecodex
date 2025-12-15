@@ -5,6 +5,7 @@ import com.lorecodex.backend.service.UserService;
 import com.lorecodex.backend.service.serviceImpl.JwtServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +23,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "security.auth.provider", havingValue = "local", matchIfMissing = true)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
