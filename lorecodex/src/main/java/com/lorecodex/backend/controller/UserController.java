@@ -69,7 +69,7 @@ public class UserController {
     @PatchMapping("/{userId}/username")
     public ResponseEntity<UserResponse> changeUsername(
             @PathVariable Long userId,
-            @RequestBody(required = true) Map<String, String> body,
+            @RequestBody() Map<String, String> body,
             @AuthenticationPrincipal User currentUser,
             Authentication authentication
     ) {
