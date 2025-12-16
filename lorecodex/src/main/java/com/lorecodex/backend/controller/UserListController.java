@@ -4,9 +4,12 @@ import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
 import com.lorecodex.backend.dto.response.UserListResponse;
+import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,6 +66,12 @@ public class UserListController {
         return ResponseEntity.ok(allLists.subList(fromIndex, toIndex));
     }
 
+    // FIXED: Changed endpoint to match frontend expectations
+    @GetMapping("/{listId}")
+    public ResponseEntity<UserListResponse> getListById(@PathVariable Long listId) {
+        return ResponseEntity.ok(userListService.getListById(listId));
+    }
+
     @PutMapping("/{listId}/update")
     public ResponseEntity<UserListResponse> updateList(
             @PathVariable Long listId,
@@ -72,8 +81,12 @@ public class UserListController {
     }
 
     @DeleteMapping("/{listId}/delete")
-    public ResponseEntity<Void> deleteList(@PathVariable Long listId) {
-        userListService.deleteList(listId);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteList(
+            @PathVariable Long listId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        userListService.deleteList(listId, currentUser);
         return ResponseEntity.noContent().build();
     }
 
@@ -104,15 +117,9 @@ public class UserListController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{listId}/get-list")
-    public ResponseEntity<UserListResponse> getListById(@PathVariable Long listId) {
-        return ResponseEntity.ok(userListService.getListById(listId));
-    }
-
     @GetMapping("/{listId}/author")
     public ResponseEntity<String> getListAuthor(@PathVariable Long listId) {
         UserListResponse list = userListService.getListById(listId);
-        // Assuming you want to return the username from the list
-        return ResponseEntity.ok("User ID: " + list.getUserId());
+        return ResponseEntity.ok(list.getUsername());
     }
 }
