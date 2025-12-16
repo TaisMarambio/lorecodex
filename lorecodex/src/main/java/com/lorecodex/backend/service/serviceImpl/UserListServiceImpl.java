@@ -13,6 +13,7 @@ import com.lorecodex.backend.model.UserList;
 import com.lorecodex.backend.repository.*;
 import com.lorecodex.backend.service.UserListService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +35,6 @@ public class UserListServiceImpl implements UserListService {
     private final GuideRepository guideRepository;
     private final ChallengeRepository challengeRepository;
     private final CommentMapper commentMapper;
-
 
     @Override
     public UserListResponse createList(Long userId, UserListRequest request) {
@@ -69,8 +69,19 @@ public class UserListServiceImpl implements UserListService {
     }
 
     @Override
-    public void deleteList(Long listId) {
+    public void deleteList(Long listId, User currentUser) {
         UserList list = getUserListByIdOrThrow(listId);
+
+        // Check if user is owner or admin
+        boolean isOwner = list.getUser().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("You don't have permission to delete this list");
+        }
+
         userListRepository.delete(list);
     }
 
@@ -164,8 +175,9 @@ public class UserListServiceImpl implements UserListService {
                 .description(list.getDescription())
                 .createdAt(list.getCreatedAt())
                 .userId(list.getUser().getId())
+                .username(list.getUser().getUsername()) // ADDED: Include username
                 .items(itemDtos)
-                .comments(commentDtos)
+                .comments(commentDtos) // ADDED: Include comments
                 .build();
     }
 

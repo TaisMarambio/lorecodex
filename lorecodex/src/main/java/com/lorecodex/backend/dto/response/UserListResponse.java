@@ -14,6 +14,7 @@ public class UserListResponse {
     private String description;
     private LocalDateTime createdAt;
     private Long userId;
+    private String username; // ADDED: Username of the list creator
     private List<ListItemResponse> items;
-    private List<CommentResponse> comments;
+    private List<CommentResponse> comments; // ADDED: Comments on the list
 }

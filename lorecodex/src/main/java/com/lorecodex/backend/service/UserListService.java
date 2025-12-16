@@ -4,6 +4,7 @@ import com.lorecodex.backend.dto.request.ListItemRequest;
 import com.lorecodex.backend.dto.request.ReorderItemRequest;
 import com.lorecodex.backend.dto.request.UserListRequest;
 import com.lorecodex.backend.dto.response.UserListResponse;
+import com.lorecodex.backend.model.User;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface UserListService {
 
     UserListResponse updateList(Long listId, UserListRequest request);
 
-    void deleteList(Long listId);
+    void deleteList(Long listId, User currentUser); // UPDATED: Added currentUser parameter
 
     void addItemToList(Long listId, ListItemRequest request);
 
