@@ -12,8 +12,6 @@ import com.lorecodex.backend.service.NewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,16 +49,14 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public NewsResponse createNews(NewsRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        User user = userRepository.findByUsername(username)
+    public NewsResponse createNews(NewsRequest request, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         News news = newsMapper.toEntity(request, user);
         news.setCreatedAt(LocalDateTime.now());
         news.setUpdatedAt(LocalDateTime.now());
+        // Crear siempre como borrador por defecto; el publish va por endpoint dedicado
         news.setDraft(true);
         news.setPublished(false);
 
@@ -108,12 +104,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public Optional<NewsResponse> toggleLike(Long id) {
+    public Optional<NewsResponse> toggleLike(Long id, Long userId) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Noticia no encontrada"));
 
-        Long currentUserId = 1L;
-        User user = userRepository.findById(currentUserId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (news.getLikedBy().contains(user)) {

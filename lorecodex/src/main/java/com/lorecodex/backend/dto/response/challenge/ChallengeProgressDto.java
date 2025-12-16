@@ -1,6 +1,7 @@
 package com.lorecodex.backend.dto.response.challenge;
 
 import lombok.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -13,4 +14,6 @@ public class ChallengeProgressDto {
     private double progress; // percentage 0‑100
     private int completed;
     private int total;
+    // Nuevo: IDs de ítems completados
+    private List<Long> completedItemIds;
 }

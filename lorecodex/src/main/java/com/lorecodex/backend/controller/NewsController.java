@@ -2,6 +2,7 @@ package com.lorecodex.backend.controller;
 
 import com.lorecodex.backend.dto.request.NewsRequest;
 import com.lorecodex.backend.dto.response.NewsResponse;
+import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.NewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,8 +10,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -39,8 +42,9 @@ public class NewsController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<NewsResponse> createNews(@RequestBody NewsRequest request) {
-        return ResponseEntity.status(201).body(newsService.createNews(request));
+    public ResponseEntity<NewsResponse> createNews(@RequestBody @Valid NewsRequest request,
+                                                   @AuthenticationPrincipal User user) {
+        return ResponseEntity.status(201).body(newsService.createNews(request, user.getId()));
     }
 
     @PutMapping("/{id}")
@@ -94,8 +98,9 @@ public class NewsController {
 
     @PostMapping("/{id}/toggle-like")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<NewsResponse> toggleLike(@PathVariable Long id) {
-        return newsService.toggleLike(id)
+    public ResponseEntity<NewsResponse> toggleLike(@PathVariable Long id,
+                                                   @AuthenticationPrincipal User user) {
+        return newsService.toggleLike(id, user.getId())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

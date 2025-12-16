@@ -71,6 +71,9 @@ public class ChallengeMapper {
                 .completed(completed)
                 .total(total)
                 .progress(progress)
+                .completedItemIds(participation.getCompletedItems().stream()
+                        .map(ChallengeItem::getId)
+                        .toList())
                 .build();
     }
 }
