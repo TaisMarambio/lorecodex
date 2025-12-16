@@ -10,19 +10,18 @@ import java.util.Optional;
 
 public interface GameService {
     List<Game> getAllGames();
-
     Page<Game> getAllGamesPaginated(Pageable pageable);
-
     Optional<Game> getGameById(Long id);
     Game createGame(Game game);
     Game updateGame(Long id, Game game);
     void deleteGame(Long id);
-
     List<Game> findGamesByTitle(String title);
-
     Page<Game> findGamesByTitle(String title, Pageable pageable);
-
     Game incrementLikes(Long id);
     Game importGameFromIgdb(CreateGameFromIgdbRequest request);
     Page<Game> findGamesByTag(String tag, Pageable pageable);
+
+    // Nuevos métodos para ordenamiento por popularidad (cantidad de ratings)
+    Page<Game> findAllOrderByRatingCount(Pageable pageable);
+    Page<Game> findGamesByTitleOrderByRatingCount(String title, Pageable pageable);
 }

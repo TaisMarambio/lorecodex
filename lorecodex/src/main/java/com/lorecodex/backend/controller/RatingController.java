@@ -8,6 +8,7 @@ import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.model.UserRating;
 import com.lorecodex.backend.repository.GameRepository;
+import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.UserRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,16 @@ public class RatingController {
     private final UserRatingService userRatingService;
     private final GameRepository gameRepository;
     private final UserRatingMapper ratingMapper;
+    private final UserRatingRepository userRatingRepository;
 
     @Autowired
     public RatingController(UserRatingService userRatingService,
                             GameRepository gameRepository,
-                            UserRatingMapper ratingMapper) {
+                            UserRatingMapper ratingMapper, UserRatingRepository userRatingRepository) {
         this.userRatingService = userRatingService;
         this.gameRepository = gameRepository;
         this.ratingMapper = ratingMapper;
+        this.userRatingRepository = userRatingRepository;
     }
 
     /**
@@ -97,13 +100,17 @@ public class RatingController {
     @GetMapping("/{gameId}/rating-summary")
     public ResponseEntity<RatingSummaryDto> getRatingSummary(
             @PathVariable Long gameId,
-            @AuthenticationPrincipal User user) {  // User puede ser null si no está autenticado
+            @AuthenticationPrincipal User user) {
 
-        // Obtener promedio (siempre disponible)
+        // Obtener promedio
         Double average = userRatingService.getAverageRatingByGameId(gameId);
+
+        // Obtener cantidad de ratings
+        Long count = userRatingRepository.countByGameId(gameId);
 
         RatingSummaryDto summary = new RatingSummaryDto();
         summary.setAverage(average != null ? average : 0.0);
+        summary.setCount(count != null ? count : 0L);
 
         // Si el usuario está autenticado, obtener su rating
         if (user != null) {
@@ -115,7 +122,6 @@ public class RatingController {
                 summary.setMine(0.0);
             }
         } else {
-            // Usuario no autenticado, rating = 0
             summary.setMine(0.0);
         }
 

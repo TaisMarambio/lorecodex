@@ -44,16 +44,33 @@ public class GameController {
 
         int safePage = parsePage(page, 0);
         int safeSize = Math.max(1, parsePage(size, 12));
-        Sort sortSpec = parseSort(sort);
-        Pageable pageable = PageRequest.of(safePage, safeSize, sortSpec);
+
+        // Detectar si es ordenamiento por popularidad (cantidad de ratings)
+        boolean isPopularSort = sort != null && sort.toLowerCase().contains("popular");
+
         Page<Game> gamesPage;
 
-        if (StringUtils.hasText(tag)) {
-            gamesPage = gameService.findGamesByTag(tag, pageable);
-        } else if (StringUtils.hasText(title)) {
-            gamesPage = gameService.findGamesByTitle(title, pageable);
+        if (isPopularSort) {
+            // Ordenar por cantidad de ratings
+            Pageable pageable = PageRequest.of(safePage, safeSize);
+
+            if (StringUtils.hasText(title)) {
+                gamesPage = gameService.findGamesByTitleOrderByRatingCount(title, pageable);
+            } else {
+                gamesPage = gameService.findAllOrderByRatingCount(pageable);
+            }
         } else {
-            gamesPage = gameService.getAllGamesPaginated(pageable);
+            // Ordenamiento normal
+            Sort sortSpec = parseSort(sort);
+            Pageable pageable = PageRequest.of(safePage, safeSize, sortSpec);
+
+            if (StringUtils.hasText(tag)) {
+                gamesPage = gameService.findGamesByTag(tag, pageable);
+            } else if (StringUtils.hasText(title)) {
+                gamesPage = gameService.findGamesByTitle(title, pageable);
+            } else {
+                gamesPage = gameService.getAllGamesPaginated(pageable);
+            }
         }
 
         return ResponseEntity.ok(PagedResponse.from(gamesPage, gameMapper.toDTOList(gamesPage.getContent())));

@@ -58,7 +58,7 @@ public class ReviewMapper {
 
         Review review = new Review();
         review.setContent(reviewRequest.getContent());
-        review.setRating(reviewRequest.getRating());
+        // El rating se establece en el service desde UserRating
         review.setLikes(0);
         review.setDislikes(0);
         review.setUser(user);
@@ -76,9 +76,7 @@ public class ReviewMapper {
         if (reviewRequest.getContent() != null) {
             review.setContent(reviewRequest.getContent());
         }
-        if (reviewRequest.getRating() != null) {
-            review.setRating(reviewRequest.getRating());
-        }
+        // El rating no se actualiza desde el request, se mantiene desde UserRating
         if (reviewRequest.getGameId() != null &&
                 (review.getGame() == null || !review.getGame().getId().equals(reviewRequest.getGameId()))) {
             Game game = gameRepository.findById(reviewRequest.getGameId())
