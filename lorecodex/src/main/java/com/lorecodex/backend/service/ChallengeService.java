@@ -8,26 +8,33 @@ import java.util.List;
 
 public interface ChallengeService {
 
-    void createChallenge(String creatorUsername, ChallengeRequest request);
+    ChallengeResponse createChallenge(Long creatorUserId, ChallengeRequest request);
 
-    void joinChallenge(Long challengeId, String username);
+    void joinChallenge(Long challengeId, Long userId);
 
-    ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username);
+    void leaveChallenge(Long challengeId, Long userId);
 
-    ChallengeResponse getChallenge(Long challengeId, String username);
+    ChallengeProgressDto completeItem(Long challengeId, Long itemId, Long userId);
+
+    ChallengeResponse getChallenge(Long challengeId, Long userId);
 
     ChallengeResponse findById(Long challengeId);
 
     List<ChallengeResponse> findAllChallenges();
 
-    ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, String username);
+    ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, Long userId);
 
-    void deleteChallenge(Long challengeId, String username);
+    void deleteChallenge(Long challengeId, Long userId);
 
-    ChallengeProgressDto getChallengeProgress(Long challengeId, String username);
+    ChallengeProgressDto getChallengeProgress(Long challengeId, Long userId);
 
     List<ChallengeResponse> findChallengesByTitle(String title);
 
+    boolean isJoined(Long challengeId, Long userId);
 
-    ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, String username);
+    ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, Long userId);
+
+    // Nuevos listados
+    List<ChallengeResponse> findChallengesCreatedByUser(Long userId);
+    List<ChallengeResponse> findChallengesJoinedByUser(Long userId);
 }

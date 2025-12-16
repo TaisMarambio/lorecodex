@@ -14,7 +14,7 @@ public interface NewsService {
 
     Optional<NewsResponse> findById(Long id);
 
-    NewsResponse createNews(NewsRequest request);
+    NewsResponse createNews(NewsRequest request, Long userId);
 
     NewsResponse updateNews(Long id, NewsRequest request);
 
@@ -25,7 +25,7 @@ public interface NewsService {
 
     List<NewsResponse> findRecentNews(int limit);
 
-    Optional<NewsResponse> toggleLike(Long id);
+    Optional<NewsResponse> toggleLike(Long id, Long userId);
 
     List<NewsResponse> findNewsByUserId(Long userId);
     Page<NewsResponse> findNewsByUserIdPaginated(Long userId, Pageable pageable);

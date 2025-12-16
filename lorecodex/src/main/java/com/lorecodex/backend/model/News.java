@@ -17,8 +17,13 @@ public class News {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 512)
     private String title;
-    private String content; // Puede ser texto plano, HTML o Markdown, chequear
+
+    @Column(columnDefinition = "TEXT")
+    private String content; // Puede ser texto plano, HTML o Markdown
+
+    @Column(columnDefinition = "TEXT")
     private String coverImageUrl;
 
     private boolean isPublished;
@@ -27,7 +32,6 @@ public class News {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Tags y/o categorias (pueden ser strings simples o una entidad aparte, revisar!!!)
     @ElementCollection
     @CollectionTable(name = "news_tags", joinColumns = @JoinColumn(name = "news_id"))
     @Column(name = "tag")
@@ -37,7 +41,6 @@ public class News {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // likes (usuarios que dieron like ca la noticia)
     @ManyToMany
     @JoinTable(
             name = "news_likes",
@@ -49,7 +52,6 @@ public class News {
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
 
-    // las imagenes extra q queres meterle dentro del texto
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NewsImage> images;
 

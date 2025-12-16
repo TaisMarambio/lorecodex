@@ -4,6 +4,8 @@ import lombok.*;
 
 import java.util.List;
 import java.util.Set;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -11,7 +13,10 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewsRequest {
+    @NotBlank
+    @Size(max = 512)
     private String title;
+    @NotBlank
     private String content;
     private String coverImageUrl;
     private boolean published;

@@ -3,7 +3,6 @@ package com.lorecodex.backend.controller;
 import com.lorecodex.backend.dto.request.ChallengeRequest;
 import com.lorecodex.backend.dto.response.challenge.ChallengeProgressDto;
 import com.lorecodex.backend.dto.response.challenge.ChallengeResponse;
-import com.lorecodex.backend.mapper.ChallengeMapper;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.service.ChallengeService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -20,27 +20,37 @@ import java.util.List;
 public class ChallengeController {
 
     private final ChallengeService service;
-    private final ChallengeMapper challengeMapper;
 
     @PostMapping
     public ResponseEntity<ChallengeResponse> create(@RequestBody ChallengeRequest request,
                                                     @AuthenticationPrincipal User user) {
-        service.createChallenge(user.getUsername(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        ChallengeResponse created = service.createChallenge(user.getId(), request);
+        // Devolver Location apuntando al recurso recién creado
+        return ResponseEntity.created(URI.create("/challenges/" + created.getId())).body(created);
+    }
+
+    @GetMapping("/me/created")
+    public List<ChallengeResponse> myCreated(@AuthenticationPrincipal User user) {
+        return service.findChallengesCreatedByUser(user.getId());
+    }
+
+    @GetMapping("/me/joined")
+    public List<ChallengeResponse> myJoined(@AuthenticationPrincipal User user) {
+        return service.findChallengesJoinedByUser(user.getId());
     }
 
     @PutMapping("/{id}")
     public ChallengeResponse update(@PathVariable Long id,
                                     @RequestBody ChallengeRequest request,
                                     @AuthenticationPrincipal User user) {
-        return service.updateChallenge(id, request, user.getUsername());
+        return service.updateChallenge(id, request, user.getId());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id,
                        @AuthenticationPrincipal User user) {
-        service.deleteChallenge(id, user.getUsername());
+        service.deleteChallenge(id, user.getId());
     }
 
     @GetMapping("/{id}")
@@ -76,7 +86,21 @@ public class ChallengeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void join(@PathVariable Long id,
                      @AuthenticationPrincipal User user) {
-        service.joinChallenge(id, user.getUsername());
+        service.joinChallenge(id, user.getId());
+    }
+
+    @PostMapping("/{id}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leave(@PathVariable Long id,
+                      @AuthenticationPrincipal User user) {
+        service.leaveChallenge(id, user.getId());
+    }
+
+    @GetMapping("/{id}/joined")
+    public ResponseEntity<Boolean> isJoined(@PathVariable Long id,
+                                            @AuthenticationPrincipal User user) {
+        boolean joined = service.isJoined(id, user.getId());
+        return ResponseEntity.ok(joined);
     }
 
     @PostMapping("/{id}/items/{itemId}/complete")
@@ -85,14 +109,14 @@ public class ChallengeController {
             @PathVariable Long itemId,
             @AuthenticationPrincipal User user
     ) {
-        ChallengeProgressDto dto = service.completeItem(id, itemId, user.getUsername());
+        ChallengeProgressDto dto = service.completeItem(id, itemId, user.getId());
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{id}/progress")
     public ChallengeProgressDto getProgress(@PathVariable Long id,
                                             @AuthenticationPrincipal User user) {
-        return service.getChallengeProgress(id, user.getUsername());
+        return service.getChallengeProgress(id, user.getId());
     }
 
     @GetMapping("/search")
@@ -130,7 +154,7 @@ public class ChallengeController {
             @PathVariable Long itemId,
             @AuthenticationPrincipal User user
     ) {
-        ChallengeProgressDto dto = service.uncompleteItem(id, itemId, user.getUsername());
+        ChallengeProgressDto dto = service.uncompleteItem(id, itemId, user.getId());
         return ResponseEntity.ok(dto);
     }
 }

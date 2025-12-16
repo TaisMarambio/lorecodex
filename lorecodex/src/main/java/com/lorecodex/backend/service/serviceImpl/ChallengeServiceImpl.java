@@ -15,16 +15,18 @@ import com.lorecodex.backend.service.ChallengeService;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.HashSet;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 
 @Service
 @Transactional
@@ -35,26 +37,26 @@ public class ChallengeServiceImpl implements ChallengeService {
     private final ChallengeParticipationRepository participationRepository;
     private final UserRepository userRepository;
     private final ChallengeMapper mapper;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public void createChallenge(String creatorUsername, ChallengeRequest request) {
-        User creator = userRepository.findByUsername(creatorUsername)
+    public ChallengeResponse createChallenge(Long creatorUserId, ChallengeRequest request) {
+        User creator = userRepository.findById(creatorUserId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         Challenge challenge = mapper.toEntity(request, creator);
         challengeRepository.save(challenge);
+        return mapper.toDto(challenge);
     }
 
     @Override
-    public void joinChallenge(Long challengeId, String username) {
-        if (participationRepository.existsByChallenge_IdAndUser_Username(challengeId, username)) {
+    public void joinChallenge(Long challengeId, Long userId) {
+        if (participationRepository.existsByChallenge_IdAndUser_Id(challengeId, userId)) {
             return;
         }
 
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge no encontrado"));
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
 
         ChallengeParticipation participation = ChallengeParticipation.builder()
@@ -68,10 +70,15 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
+    public void leaveChallenge(Long challengeId, Long userId) {
+        participationRepository.deleteByChallenge_IdAndUser_Id(challengeId, userId);
+    }
+
+    @Override
     @Transactional
-    public ChallengeProgressDto completeItem(Long challengeId, Long itemId, String username) {
+    public ChallengeProgressDto completeItem(Long challengeId, Long itemId, Long userId) {
         ChallengeParticipation participation =
-                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+                participationRepository.findByChallenge_IdAndUser_Id(challengeId, userId);
 
         if (participation == null) {
             throw new IllegalStateException("User has not joined this challenge");
@@ -99,7 +106,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     @Transactional(readOnly = true)
-    public ChallengeResponse getChallenge(Long challengeId, String username) {
+    public ChallengeResponse getChallenge(Long challengeId, Long userId) {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
         return mapper.toDto(challenge);
@@ -121,11 +128,11 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
-    public ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, String username) {
+    public ChallengeResponse updateChallenge(Long challengeId, ChallengeRequest request, Long userId) {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
 
-        if (!challenge.getCreator().getUsername().equals(username)) {
+        if (!challenge.getCreator().getId().equals(userId)) {
             throw new IllegalStateException("Only the creator can update the challenge");
         }
 
@@ -146,22 +153,27 @@ public class ChallengeServiceImpl implements ChallengeService {
     }
 
     @Override
-    public void deleteChallenge(Long challengeId, String username) {
+    public void deleteChallenge(Long challengeId, Long userId) {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge not found"));
 
-        if (!challenge.getCreator().getUsername().equals(username)) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !challenge.getCreator().getId().equals(userId)) {
             throw new IllegalStateException("Only the creator can delete the challenge");
         }
 
-        participationRepository.deleteById(challengeId);
+        participationRepository.deleteByChallenge_Id(challengeId);
         challengeRepository.delete(challenge);
     }
 
     @Override
-    public ChallengeProgressDto getChallengeProgress(Long challengeId, String username) {
+    public ChallengeProgressDto getChallengeProgress(Long challengeId, Long userId) {
         ChallengeParticipation participation =
-                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+                participationRepository.findByChallenge_IdAndUser_Id(challengeId, userId);
         if (participation == null) {
             throw new EntityNotFoundException("User has not joined this challenge");
         }
@@ -178,9 +190,9 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     @Transactional
-    public ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, String username) {
+    public ChallengeProgressDto uncompleteItem(Long challengeId, Long itemId, Long userId) {
         ChallengeParticipation participation =
-                participationRepository.findByChallenge_IdAndUser_Username(challengeId, username);
+                participationRepository.findByChallenge_IdAndUser_Id(challengeId, userId);
 
         if (participation == null) {
             throw new IllegalStateException("User has not joined this challenge");
@@ -200,5 +212,30 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         participationRepository.save(participation);
         return mapper.toProgressDto(participation);
+    }
+
+    @Override
+    public boolean isJoined(Long challengeId, Long userId) {
+        return participationRepository.existsByChallenge_IdAndUser_Id(challengeId, userId);
+    }
+
+    @Override
+    public List<ChallengeResponse> findChallengesCreatedByUser(Long userId) {
+        List<Challenge> challenges = challengeRepository.findByCreator_Id(userId);
+        return challenges.stream().map(mapper::toDto).toList();
+    }
+
+    @Override
+    public List<ChallengeResponse> findChallengesJoinedByUser(Long userId) {
+        List<ChallengeParticipation> parts = participationRepository.findByUser_Id(userId);
+        // Distintos por id preservando orden de aparición
+        Map<Long, Challenge> byId = new LinkedHashMap<>();
+        for (ChallengeParticipation p : parts) {
+            Challenge ch = p.getChallenge();
+            if (ch != null && ch.getId() != null) {
+                byId.putIfAbsent(ch.getId(), ch);
+            }
+        }
+        return byId.values().stream().map(mapper::toDto).toList();
     }
 }

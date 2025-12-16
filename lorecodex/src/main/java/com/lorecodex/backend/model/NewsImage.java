@@ -15,6 +15,7 @@ public class NewsImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
     private String caption;
 
