@@ -6,6 +6,7 @@ import com.lorecodex.backend.mapper.UserProfileMapper;
 import com.lorecodex.backend.model.User;
 import com.lorecodex.backend.repository.UserRepository;
 import com.lorecodex.backend.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        boolean isFollowing = followService.isFollowing(currentUserId, user.getId());
+        boolean isFollowing = (currentUserId != null) && followService.isFollowing(currentUserId, user.getId());
         int followersCount = followService.getFollowers(user.getId()).size();
         int followingCount = followService.getFollowing(user.getId()).size();
 
@@ -59,6 +60,20 @@ public class UserServiceImpl implements UserService {
                 lists,
                 reviews
         );
+    }
+
+    @Override
+    public Long findUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getId)
+                .orElse(null);
+    }
+
+    @Override
+    public UserProfileResponse getUserProfileByUsername(String username, Long currentUserId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        return getUserProfileById(user.getId(), currentUserId);
     }
 
     @Override

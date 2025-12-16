@@ -23,6 +23,17 @@ public class GuideMapper {
         response.setPublished(guide.isPublished());
         response.setDraft(guide.isDraft());
 
+        if (guide.getUser() != null) {
+            response.setUserId(guide.getUser().getId());
+            response.setCreatorUsername(guide.getUser().getUsername());
+        }
+        if (guide.getGame() != null) {
+            response.setGameId(guide.getGame().getId());
+        }
+        if (guide.getLikedBy() != null) {
+            response.setLikeCount(guide.getLikedBy().size());
+        }
+
         if (guide.getImages() != null) {
             List<GuideImageResponse> images = guide.getImages().stream().map(img -> {
                 GuideImageResponse res = new GuideImageResponse();

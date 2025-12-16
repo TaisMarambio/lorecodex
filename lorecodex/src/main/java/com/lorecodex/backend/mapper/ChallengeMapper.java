@@ -46,6 +46,7 @@ public class ChallengeMapper {
                 .title(challenge.getTitle())
                 .description(challenge.getDescription())
                 .creatorUsername(challenge.getCreator().getUsername())
+                .creatorUserId(challenge.getCreator().getId())
                 .items(challenge.getItems().stream()
                         .map(item -> ChallengeItemDto.builder()
                                 .id(item.getId())

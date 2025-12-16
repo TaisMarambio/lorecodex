@@ -16,6 +16,7 @@ public class ChallengeResponse {
     private String title;
     private String description;
     private String creatorUsername;
+    private Long creatorUserId;
     private List<ChallengeItemDto> items;
     private List<CommentResponse> comments;
 }
