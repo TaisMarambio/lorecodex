@@ -21,4 +21,8 @@ public interface UserService extends UserDetailsService {
     void deleteUser(Long id);
     List<User> getAllUsers();
     UserProfileResponse getUserProfileById(Long userId, Long currentUserId);
+
+    // Nuevos helpers para resolver por username
+    Long findUserIdByUsername(String username);
+    UserProfileResponse getUserProfileByUsername(String username, Long currentUserId);
 }

@@ -21,6 +21,7 @@ public class GuideResponse {
     private boolean isDraft;
     private Set<String> tags;
     private Long userId;
+    private String creatorUsername;
     private Long gameId; // Add this field
     private int likeCount;
     private List<CommentResponse> comments;

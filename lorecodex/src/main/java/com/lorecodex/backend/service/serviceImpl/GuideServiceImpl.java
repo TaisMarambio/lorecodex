@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,26 @@ public class GuideServiceImpl implements GuideService {
 
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
+    private final GameRepository gameRepository;
     private final GuideMapper guideMapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    private boolean isAdmin(Authentication auth) {
+        return auth != null && auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
+    }
+
+    private void assertOwnerOrAdmin(Guide guide) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean admin = isAdmin(auth);
+        String principal = auth != null ? auth.getName() : null;
+        if (!admin) {
+            if (guide.getUser() == null || guide.getUser().getUsername() == null || !guide.getUser().getUsername().equals(principal)) {
+                throw new RuntimeException("No autorizado: sólo el creador o admin");
+            }
+        }
+    }
 
     @Override
     @Transactional
@@ -46,11 +65,17 @@ public class GuideServiceImpl implements GuideService {
         guide.setContent(request.getContent());
         guide.setCoverImageUrl(request.getCoverImageUrl());
         guide.setTags(request.getTags());
-        guide.setPublished(request.isPublished());
+        guide.setPublished(false);
         guide.setDraft(true);
         guide.setUser(user);
         guide.setCreatedAt(LocalDateTime.now());
         guide.setUpdatedAt(LocalDateTime.now());
+
+        if (request.getGameId() != null) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Juego no encontrado"));
+            guide.setGame(game);
+        }
 
         if (request.getImages() != null) {
             List<GuideImage> imagesFromRequest = request.getImages().stream().map(imgReq -> {
@@ -63,15 +88,7 @@ public class GuideServiceImpl implements GuideService {
             guide.setImages(imagesFromRequest);
         }
 
-        // (Opcional) Procesar imágenes subidas desde MultipartFile
-        // if (images != null && !images.isEmpty()) {
-        // TODO: procesar imágenes subidas reales
-        // }
-
         Guide saved = guideRepository.save(guide);
-        if (guide.isPublished()==true) {
-            eventPublisher.publishEvent(new GuideCreatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
-        }
         return guideMapper.mapToResponse(saved);
     }
 
@@ -101,13 +118,19 @@ public class GuideServiceImpl implements GuideService {
         Guide guide = guideRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
 
+        assertOwnerOrAdmin(guide);
+
         guide.setTitle(request.getTitle());
         guide.setContent(request.getContent());
         guide.setCoverImageUrl(request.getCoverImageUrl());
         guide.setTags(request.getTags());
-        guide.setPublished(request.isPublished());
-        guide.setDraft(request.isDraft());
         guide.setUpdatedAt(LocalDateTime.now());
+
+        if (request.getGameId() != null) {
+            Game game = gameRepository.findById(request.getGameId())
+                    .orElseThrow(() -> new RuntimeException("Juego no encontrado"));
+            guide.setGame(game);
+        }
 
         guide.getImages().clear();
         if (request.getImages() != null) {
@@ -122,7 +145,6 @@ public class GuideServiceImpl implements GuideService {
         }
 
         Guide saved = guideRepository.save(guide);
-        // Publicar evento de actualización si la guía está publicada
         if (saved.isPublished()) {
             eventPublisher.publishEvent(new GuideUpdatedEvent(saved.getUser().getId(), saved.getUser().getUsername(), saved.getTitle()));
         }
@@ -131,7 +153,10 @@ public class GuideServiceImpl implements GuideService {
 
     @Override
     public void deleteGuide(Long id) {
-        guideRepository.deleteById(id);
+        Guide guide = guideRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        assertOwnerOrAdmin(guide);
+        guideRepository.delete(guide);
     }
 
     @Override
@@ -201,6 +226,7 @@ public class GuideServiceImpl implements GuideService {
     public Optional<GuideResponse> publishGuide(Long id) {
         Guide guide = guideRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        assertOwnerOrAdmin(guide);
 
         if (guide.isPublished()) {
             throw new RuntimeException("La guía ya está publicada");
@@ -223,6 +249,7 @@ public class GuideServiceImpl implements GuideService {
     public Optional<GuideResponse> unpublishGuide(Long id) {
         Guide guide = guideRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Guía no encontrada"));
+        assertOwnerOrAdmin(guide);
 
         if (!guide.isPublished()) {
             throw new RuntimeException("La guía ya está sin publicar");
