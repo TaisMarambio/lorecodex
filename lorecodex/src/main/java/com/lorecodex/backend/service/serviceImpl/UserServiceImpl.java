@@ -1,6 +1,7 @@
 package com.lorecodex.backend.service.serviceImpl;
 
 import com.lorecodex.backend.dto.response.UserProfileResponse;
+import com.lorecodex.backend.exception.UsernameConflictException;
 import com.lorecodex.backend.mapper.ReviewMapper;
 import com.lorecodex.backend.mapper.UserProfileMapper;
 import com.lorecodex.backend.model.User;
@@ -10,6 +11,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -115,5 +118,37 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    private static final int USERNAME_MIN = 3;
+    private static final int USERNAME_MAX = 15;
+    private static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
+
+    @Override
+    @Transactional
+    public User updateUsername(Long userId, String newUsername) {
+        String candidate = newUsername == null ? "" : newUsername.trim();
+        if (candidate.isEmpty()) {
+            throw new IllegalArgumentException("Username must not be empty");
+        }
+        if (candidate.length() < USERNAME_MIN) {
+            throw new IllegalArgumentException("Username must be at least " + USERNAME_MIN + " characters");
+        }
+        if (candidate.length() > USERNAME_MAX) {
+            throw new IllegalArgumentException("Username must be at most " + USERNAME_MAX + " characters");
+        }
+        if (!candidate.matches(USERNAME_REGEX)) {
+            throw new IllegalArgumentException("Username contains invalid characters (allowed: letters, numbers, dot, underscore, dash)");
+        }
+
+        Optional<User> existingByUsername = userRepository.findByUsername(candidate);
+        if (existingByUsername.isPresent() && !existingByUsername.get().getId().equals(userId)) {
+            throw new UsernameConflictException("Username is already taken");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setUsername(candidate);
+        return userRepository.save(user);
     }
 }

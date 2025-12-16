@@ -15,6 +15,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -65,5 +66,38 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserProfileById(userId, currentUser.getId()));
     }
 
+    @PatchMapping("/{userId}/username")
+    public ResponseEntity<UserResponse> changeUsername(
+            @PathVariable Long userId,
+            @RequestBody(required = true) Map<String, String> body,
+            @AuthenticationPrincipal User currentUser,
+            Authentication authentication
+    ) {
+        String newUsername = body.get("username");
+        if (newUsername == null || newUsername.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
 
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
+        boolean isSelf = currentUser != null && currentUser.getId().equals(userId);
+
+        if (!isAdmin && !isSelf) {
+            return ResponseEntity.status(403).build();
+        }
+
+        User updated = userService.updateUsername(userId, newUsername.trim());
+        return ResponseEntity.ok(userMapper.toDTO(updated));
+    }
+
+    @GetMapping("/username-available/{candidate}")
+    public ResponseEntity<Boolean> isUsernameAvailable(@PathVariable String candidate) {
+        String normalized = candidate == null ? "" : candidate.trim();
+        if (normalized.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        boolean available = userService.getUserByUsername(normalized).isEmpty();
+        return ResponseEntity.ok(available);
+    }
 }

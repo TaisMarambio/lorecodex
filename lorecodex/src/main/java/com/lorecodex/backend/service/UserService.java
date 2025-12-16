@@ -25,4 +25,7 @@ public interface UserService extends UserDetailsService {
     // Nuevos helpers para resolver por username
     Long findUserIdByUsername(String username);
     UserProfileResponse getUserProfileByUsername(String username, Long currentUserId);
+
+    // Nuevo: actualizar username
+    User updateUsername(Long userId, String newUsername);
 }
