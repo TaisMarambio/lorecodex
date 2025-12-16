@@ -3,25 +3,33 @@ package com.lorecodex.backend.service.serviceImpl;
 import com.lorecodex.backend.dto.response.igdb.CreateGameFromIgdbRequest;
 import com.lorecodex.backend.model.Game;
 import com.lorecodex.backend.repository.GameRepository;
+import com.lorecodex.backend.repository.UserRatingRepository;
 import com.lorecodex.backend.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+
 @Service
 public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
-    private static final int POPULAR_LIKES_THRESHOLD = 1_000;
+    private final UserRatingRepository userRatingRepository;
+
+    // Threshold basado en cantidad de ratings, no likes
+    private static final int POPULAR_RATINGS_THRESHOLD = 10;
     private static final String POPULAR_TAG = "Popular";
 
     @Autowired
-    public GameServiceImpl(GameRepository gameRepository) {
+    public GameServiceImpl(GameRepository gameRepository,
+                           UserRatingRepository userRatingRepository) {
         this.gameRepository = gameRepository;
+        this.userRatingRepository = userRatingRepository;
     }
 
     @Override
@@ -40,6 +48,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
     public Game createGame(Game game) {
         if (game.getRating() == null) {
             game.setRating(0.0);
@@ -53,6 +62,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
     public Game updateGame(Long id, Game gameDetails) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
@@ -76,17 +86,19 @@ public class GameServiceImpl implements GameService {
             game.setDevelopersAndPublishers(gameDetails.getDevelopersAndPublishers());
         }
 
+        updatePopularTag(game);
         return gameRepository.save(game);
     }
 
     @Override
+    @Transactional
     public void deleteGame(Long id) {
         gameRepository.deleteById(id);
     }
 
     @Override
     public List<Game> findGamesByTitle(String title) {
-        return gameRepository.findByTitleContainingIgnoreCase(title);
+        return gameRepository.findByTitleContainingIgnoreCase(title, Pageable.unpaged()).getContent();
     }
 
     @Override
@@ -100,15 +112,27 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Page<Game> findAllOrderByRatingCount(Pageable pageable) {
+        return gameRepository.findAllOrderByRatingCount(pageable);
+    }
+
+    @Override
+    public Page<Game> findGamesByTitleOrderByRatingCount(String title, Pageable pageable) {
+        return gameRepository.findByTitleOrderByRatingCount(title, pageable);
+    }
+
+    @Override
+    @Transactional
     public Game incrementLikes(Long id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
         game.setLikes(game.getLikes() + 1);
-        updatePopularTag(game);
+        // No actualizamos popular por likes
         return gameRepository.save(game);
     }
 
     @Override
+    @Transactional
     public Game importGameFromIgdb(CreateGameFromIgdbRequest request) {
         Optional<Game> existingGame = gameRepository.findByTitleIgnoreCase(request.getTitle());
 
@@ -121,7 +145,7 @@ public class GameServiceImpl implements GameService {
         newGame.setDescription(request.getDescription());
         newGame.setCoverImage(request.getCoverImage());
         newGame.setReleaseDate(request.getReleaseDate());
-        newGame.setRating(0.0); // o null, según tu lógica
+        newGame.setRating(0.0);
         newGame.setLikes(0);
         newGame.setGenres(request.getGenres());
         newGame.setDevelopersAndPublishers(new HashSet<>());
@@ -137,9 +161,16 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    /**
+     * Actualiza el tag "Popular" basado en la CANTIDAD DE RATINGS
+     */
     private void updatePopularTag(Game game) {
         ensureTagCollection(game);
-        if (game.getLikes() >= POPULAR_LIKES_THRESHOLD) {
+
+        // Contar la cantidad de ratings que tiene este juego
+        Long ratingsCount = userRatingRepository.countByGameId(game.getId());
+
+        if (ratingsCount != null && ratingsCount >= POPULAR_RATINGS_THRESHOLD) {
             game.getTags().add(POPULAR_TAG);
         } else {
             game.getTags().remove(POPULAR_TAG);

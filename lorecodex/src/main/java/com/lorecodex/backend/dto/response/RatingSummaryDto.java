@@ -2,9 +2,6 @@ package com.lorecodex.backend.dto.response;
 
 import lombok.*;
 
-/**
- * DTO que combina el promedio de ratings y el rating del usuario actual
- */
 @Getter
 @Setter
 @Data
@@ -21,4 +18,9 @@ public class RatingSummaryDto {
      * Rating del usuario actual (0.0 si no ha votado o no está autenticado)
      */
     private Double mine;
+
+    /**
+     * Cantidad total de ratings
+     */
+    private Long count;
 }

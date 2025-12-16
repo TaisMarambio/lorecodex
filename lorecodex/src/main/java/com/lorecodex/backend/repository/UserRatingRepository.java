@@ -17,7 +17,11 @@ public interface UserRatingRepository extends JpaRepository<UserRating, Long> {
     List<UserRating> findByGame(Game game);
     List<UserRating> findByUser(User user);
     void deleteByUserAndGame(User user, Game game);
+
     @Query("SELECT AVG(r.rating) FROM UserRating r WHERE r.game.id = :gameId")
     Double findAverageRatingByGameId(@Param("gameId") Long gameId);
 
+    // NUEVO: Contar cantidad de ratings por juego
+    @Query("SELECT COUNT(r) FROM UserRating r WHERE r.game.id = :gameId")
+    Long countByGameId(@Param("gameId") Long gameId);
 }

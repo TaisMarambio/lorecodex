@@ -1,4 +1,5 @@
 package com.lorecodex.backend.model;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +28,7 @@ public class Game {
 
     @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
+
     private LocalDate releaseDate;
     private Double rating;
     private Integer likes;
@@ -57,6 +59,10 @@ public class Game {
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserRating> userRatings = new ArrayList<>();
+
+    // SOLUCIÓN: Agregar cascade para game_notes
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameNote> gameNotes = new ArrayList<>();
 
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
