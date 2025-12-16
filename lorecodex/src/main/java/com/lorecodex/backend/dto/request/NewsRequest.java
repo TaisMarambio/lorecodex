@@ -16,9 +16,16 @@ public class NewsRequest {
     @NotBlank
     @Size(max = 512)
     private String title;
+
     @NotBlank
     private String content;
-    private String coverImageUrl;
+
+    // ✅ NUEVO: Agregar summary
+    private String summary;
+
+    // ✅ CAMBIO: Renombrado de coverImageUrl a coverImage para consistencia con frontend
+    private String coverImage;
+
     private boolean published;
     private boolean draft;
     private Set<String> tags;

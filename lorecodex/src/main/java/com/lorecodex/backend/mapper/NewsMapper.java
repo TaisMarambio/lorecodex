@@ -19,7 +19,13 @@ public class NewsMapper {
         News news = new News();
         news.setTitle(request.getTitle());
         news.setContent(request.getContent());
-        news.setCoverImageUrl(request.getCoverImageUrl());
+
+        // ✅ MAPEAR summary
+        news.setSummary(request.getSummary());
+
+        // ✅ MAPEAR coverImage correctamente
+        news.setCoverImageUrl(request.getCoverImage());
+
         news.setTags(request.getTags());
         news.setPublished(request.isPublished());
         news.setDraft(request.isDraft());
@@ -31,7 +37,7 @@ public class NewsMapper {
                         NewsImage img = new NewsImage();
                         img.setImageUrl(imageRequest.getImageUrl());
                         img.setCaption(imageRequest.getCaption());
-                        img.setNews(news); // vínculo bidireccional
+                        img.setNews(news);
                         return img;
                     })
                     .collect(Collectors.toList());
@@ -46,11 +52,21 @@ public class NewsMapper {
                 .id(news.getId())
                 .title(news.getTitle())
                 .content(news.getContent())
-                .coverImageUrl(news.getCoverImageUrl())
+
+                // ✅ MAPEAR summary
+                .summary(news.getSummary())
+
+                // ✅ MAPEAR coverImage correctamente
+                .coverImage(news.getCoverImageUrl())
+
                 .isPublished(news.isPublished())
                 .isDraft(news.isDraft())
                 .tags(news.getTags())
                 .userId(news.getUser() != null ? news.getUser().getId() : null)
+
+                // ✅ AGREGAR authorUsername
+                .authorUsername(news.getUser() != null ? news.getUser().getUsername() : null)
+
                 .likeCount(news.getLikedBy() != null ? news.getLikedBy().size() : 0)
                 .comments(news.getComments() != null
                         ? news.getComments().stream().map(c -> CommentResponse.builder()
@@ -78,12 +94,18 @@ public class NewsMapper {
     public void updateEntityFromRequest(NewsRequest request, News news) {
         news.setTitle(request.getTitle());
         news.setContent(request.getContent());
-        news.setCoverImageUrl(request.getCoverImageUrl());
+
+        // ✅ ACTUALIZAR summary
+        news.setSummary(request.getSummary());
+
+        // ✅ ACTUALIZAR coverImage correctamente
+        news.setCoverImageUrl(request.getCoverImage());
+
         news.setTags(request.getTags());
         news.setPublished(request.isPublished());
         news.setDraft(request.isDraft());
 
-        // Actualizar imágenes: limpiar y volver a asignar
+        // Actualizar imágenes
         if (request.getImages() != null) {
             news.getImages().clear();
             List<NewsImage> images = request.getImages().stream()

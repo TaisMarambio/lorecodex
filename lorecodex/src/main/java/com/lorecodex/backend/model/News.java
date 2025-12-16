@@ -21,7 +21,11 @@ public class News {
     private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String content; // Puede ser texto plano, HTML o Markdown
+    private String content;
+
+    // ✅ NUEVO: Agregar campo summary
+    @Column(columnDefinition = "TEXT")
+    private String summary;
 
     @Column(columnDefinition = "TEXT")
     private String coverImageUrl;
