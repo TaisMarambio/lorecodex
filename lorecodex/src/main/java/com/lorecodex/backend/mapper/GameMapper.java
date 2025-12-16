@@ -31,11 +31,13 @@ public class GameMapper {
                 .releaseDate(game.getReleaseDate())
                 .createdAt(game.getCreatedAt())
                 .rating(game.getRating())
-                .likes(game.getLikes())
+                // CHANGED: Use ratingCount instead of likes
+                .ratingCount(game.getRatingCount())
                 .genres(game.getGenres())
                 .developersAndPublishers(game.getDevelopersAndPublishers())
                 .tags(game.getTags())
-                .playerCount(playerCountFormatter.format(game.getLikes()))
+                // CHANGED: Format based on rating count
+                .playerCount(playerCountFormatter.format(game.getRatingCount()))
                 .build();
     }
 
@@ -63,7 +65,7 @@ public class GameMapper {
         game.setDevelopersAndPublishers(copyOrEmpty(gameRequest.getDevelopersAndPublishers()));
         game.setTags(copyOrEmpty(gameRequest.getTags()));
         game.setRating(0.0);
-        game.setLikes(0);
+        game.setRatingCount(0); // Initialize rating count
 
         return game;
     }

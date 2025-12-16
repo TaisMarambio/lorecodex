@@ -44,9 +44,6 @@ public class GameServiceImpl implements GameService {
         if (game.getRating() == null) {
             game.setRating(0.0);
         }
-        if (game.getLikes() == null) {
-            game.setLikes(0);
-        }
         ensureTagCollection(game);
         updatePopularTag(game);
         return gameRepository.save(game);
@@ -103,7 +100,6 @@ public class GameServiceImpl implements GameService {
     public Game incrementLikes(Long id) {
         Game game = gameRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
-        game.setLikes(game.getLikes() + 1);
         updatePopularTag(game);
         return gameRepository.save(game);
     }
@@ -121,8 +117,7 @@ public class GameServiceImpl implements GameService {
         newGame.setDescription(request.getDescription());
         newGame.setCoverImage(request.getCoverImage());
         newGame.setReleaseDate(request.getReleaseDate());
-        newGame.setRating(0.0); // o null, según tu lógica
-        newGame.setLikes(0);
+        newGame.setRating(0.0);
         newGame.setGenres(request.getGenres());
         newGame.setDevelopersAndPublishers(new HashSet<>());
         ensureTagCollection(newGame);

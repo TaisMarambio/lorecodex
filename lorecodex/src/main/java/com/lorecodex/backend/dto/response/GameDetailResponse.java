@@ -20,9 +20,14 @@ public class GameDetailResponse {
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
+
     @JsonProperty("averageRating")
     private Double rating;
-    private Integer likes;
+
+    // REMOVED: private Integer likes;
+    // ADDED: Rating count for popularity display
+    private Integer ratingCount;
+
     private Set<String> genres;
     private Set<String> developersAndPublishers;
     private Set<String> tags;

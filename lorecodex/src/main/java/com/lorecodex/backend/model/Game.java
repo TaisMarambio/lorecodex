@@ -27,9 +27,14 @@ public class Game {
 
     @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
+
     private LocalDate releaseDate;
     private Double rating;
-    private Integer likes;
+
+    // REMOVED: private Integer likes;
+    // ADDED: Rating count for popularity calculation
+    @Column(name = "rating_count")
+    private Integer ratingCount = 0;
 
     @ElementCollection
     @CollectionTable(name = "game_genres", joinColumns = @JoinColumn(name = "game_id"))
@@ -58,6 +63,10 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserRating> userRatings = new ArrayList<>();
 
+    // ADDED: Cascade delete for game notes
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameNote> gameNotes = new ArrayList<>();
+
     @Column(name = "igdb_id", unique = true)
     private Long igdbId;
 
@@ -65,6 +74,27 @@ public class Game {
     private void setCreationTimestamp() {
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+    }
+
+    // Helper method to update rating count
+    public void updateRatingCount(int count) {
+        this.ratingCount = count;
+        updatePopularTag();
+    }
+
+    // Update popular tag based on rating count (not likes)
+    private void updatePopularTag() {
+        if (this.tags == null) {
+            this.tags = new HashSet<>();
+        }
+
+        // Consider "popular" if has 50+ ratings with good average
+        if (this.ratingCount != null && this.ratingCount >= 50 &&
+                this.rating != null && this.rating >= 4.0) {
+            this.tags.add("Popular");
+        } else {
+            this.tags.remove("Popular");
         }
     }
 }
