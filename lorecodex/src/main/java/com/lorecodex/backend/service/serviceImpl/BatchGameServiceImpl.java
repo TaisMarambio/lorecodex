@@ -58,12 +58,24 @@ public class BatchGameServiceImpl implements BatchGameService {
                     continue;
                 }
 
-                // Crear el juego
+                // Crear el juego con soporte de fecha/año/desconocido
                 Game game = new Game();
                 game.setTitle(gameRequest.getTitle());
                 game.setDescription(gameRequest.getDescription());
                 game.setCoverImage(gameRequest.getCoverImage());
                 game.setReleaseDate(gameRequest.getReleaseDate());
+                game.setReleaseYear(gameRequest.getReleaseYear());
+                game.setReleaseDateUnknown(Boolean.TRUE.equals(gameRequest.getReleaseDateUnknown()));
+                // Normalizar
+                if (Boolean.TRUE.equals(game.getReleaseDateUnknown())) {
+                    game.setReleaseDate(null);
+                    game.setReleaseYear(null);
+                } else if (game.getReleaseDate() != null) {
+                    game.setReleaseDateUnknown(false);
+                } else if (game.getReleaseYear() != null) {
+                    game.setReleaseDate(null);
+                    game.setReleaseDateUnknown(false);
+                }
 
                 // Manejar géneros - convertir String a Set
                 if (gameRequest.getGenre() != null && !gameRequest.getGenre().trim().isEmpty()) {

@@ -29,7 +29,15 @@ public class Game {
     @Column(name = "cover_image", columnDefinition = "TEXT")
     private String coverImage;
 
+    // Fecha completa opcional
     private LocalDate releaseDate;
+    // Año de lanzamiento (opcional cuando solo se conoce el año)
+    @Column(name = "release_year")
+    private Integer releaseYear;
+    // Indica si la fecha de lanzamiento es desconocida
+    @Column(name = "release_date_unknown")
+    private Boolean releaseDateUnknown;
+
     private Double rating;
     private Integer likes;
 
@@ -71,6 +79,10 @@ public class Game {
     private void setCreationTimestamp() {
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+        // Normalizar valores nulos
+        if (this.releaseDateUnknown == null) {
+            this.releaseDateUnknown = false;
         }
     }
 }

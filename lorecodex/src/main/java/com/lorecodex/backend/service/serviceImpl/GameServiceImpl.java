@@ -79,6 +79,23 @@ public class GameServiceImpl implements GameService {
         if (gameDetails.getReleaseDate() != null) {
             game.setReleaseDate(gameDetails.getReleaseDate());
         }
+        if (gameDetails.getReleaseYear() != null) {
+            game.setReleaseYear(gameDetails.getReleaseYear());
+        }
+        if (gameDetails.getReleaseDateUnknown() != null) {
+            game.setReleaseDateUnknown(Boolean.TRUE.equals(gameDetails.getReleaseDateUnknown()));
+        }
+        // Normalizar reglas
+        if (Boolean.TRUE.equals(game.getReleaseDateUnknown())) {
+            game.setReleaseDate(null);
+            game.setReleaseYear(null);
+        } else if (game.getReleaseDate() != null) {
+            game.setReleaseDateUnknown(false);
+        } else if (game.getReleaseYear() != null) {
+            game.setReleaseDate(null);
+            game.setReleaseDateUnknown(false);
+        }
+
         if (gameDetails.getGenres() != null) {
             game.setGenres(gameDetails.getGenres());
         }

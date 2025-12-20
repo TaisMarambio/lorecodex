@@ -20,6 +20,8 @@ public class GameDetailResponse {
     private String description;
     private String coverImage;
     private LocalDate releaseDate;
+    private Integer releaseYear; // nuevo campo: solo año
+    private Boolean releaseDateUnknown; // nuevo campo: estado desconocido
     @JsonProperty("averageRating")
     private Double rating;
     private Integer likes;

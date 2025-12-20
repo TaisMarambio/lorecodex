@@ -18,7 +18,9 @@ public class GameRequest {
     private String genre;  // Campo singular para compatibilidad
     private String description;
     private String coverImage;
-    private LocalDate releaseDate;
+    private LocalDate releaseDate; // fecha completa opcional
+    private Integer releaseYear;    // solo año
+    private Boolean releaseDateUnknown; // permite "Unknown"
     private Set<String> genres;  // Campo plural
     private Set<String> tags;
     private Set<String> developersAndPublishers;

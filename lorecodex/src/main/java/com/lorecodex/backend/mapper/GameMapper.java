@@ -29,6 +29,8 @@ public class GameMapper {
                 .description(game.getDescription())
                 .coverImage(upgradeCoverImage(game.getCoverImage()))
                 .releaseDate(game.getReleaseDate())
+                .releaseYear(game.getReleaseYear())
+                .releaseDateUnknown(Boolean.TRUE.equals(game.getReleaseDateUnknown()))
                 .createdAt(game.getCreatedAt())
                 .rating(game.getRating())
                 .likes(game.getLikes())
@@ -59,6 +61,9 @@ public class GameMapper {
         game.setDescription(gameRequest.getDescription());
         game.setCoverImage(gameRequest.getCoverImage());
         game.setReleaseDate(gameRequest.getReleaseDate());
+        game.setReleaseYear(gameRequest.getReleaseYear());
+        game.setReleaseDateUnknown(Boolean.TRUE.equals(gameRequest.getReleaseDateUnknown()));
+        normalizeReleaseFields(game);
         game.setGenres(copyOrEmpty(gameRequest.getGenres()));
         game.setDevelopersAndPublishers(copyOrEmpty(gameRequest.getDevelopersAndPublishers()));
         game.setTags(copyOrEmpty(gameRequest.getTags()));
@@ -81,6 +86,13 @@ public class GameMapper {
         if (gameRequest.getReleaseDate() != null) {
             game.setReleaseDate(gameRequest.getReleaseDate());
         }
+        if (gameRequest.getReleaseYear() != null) {
+            game.setReleaseYear(gameRequest.getReleaseYear());
+        }
+        if (gameRequest.getReleaseDateUnknown() != null) {
+            game.setReleaseDateUnknown(Boolean.TRUE.equals(gameRequest.getReleaseDateUnknown()));
+        }
+        normalizeReleaseFields(game);
         if (gameRequest.getGenres() != null) {
             game.setGenres(gameRequest.getGenres());
         }
@@ -89,6 +101,26 @@ public class GameMapper {
         }
         if (gameRequest.getTags() != null) {
             game.setTags(copyOrEmpty(gameRequest.getTags()));
+        }
+    }
+
+    private void normalizeReleaseFields(Game game) {
+        // Regla de negocio:
+        // - Si releaseDateUnknown == true => limpiar releaseDate y releaseYear
+        // - Si releaseDate tiene valor => releaseDateUnknown = false
+        // - Si solo hay releaseYear => releaseDate = null y releaseDateUnknown = false
+        if (Boolean.TRUE.equals(game.getReleaseDateUnknown())) {
+            game.setReleaseDate(null);
+            game.setReleaseYear(null);
+            return;
+        }
+        if (game.getReleaseDate() != null) {
+            game.setReleaseDateUnknown(false);
+            return;
+        }
+        if (game.getReleaseYear() != null) {
+            game.setReleaseDate(null);
+            game.setReleaseDateUnknown(false);
         }
     }
 
