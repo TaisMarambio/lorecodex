@@ -45,6 +45,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-cache"
     implementation "com.github.ben-manes.caffeine:caffeine"
     testRuntimeOnly 'com.h2database:h2:2.3.232'
+    implementation 'org.flywaydb:flyway-core:10.17.0'
 }
 
 tasks.named('test') {
