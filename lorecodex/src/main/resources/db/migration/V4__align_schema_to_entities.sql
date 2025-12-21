@@ -525,22 +525,96 @@ ALTER TABLE reviews
 ALTER TABLE reviews
     ADD CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_guide FOREIGN KEY (guide_id) REFERENCES guides(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_user_list FOREIGN KEY (user_list_id) REFERENCES user_lists(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_challenge FOREIGN KEY (challenge_id) REFERENCES challenge(id) ON DELETE CASCADE;
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'game_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'user_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'review_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'guide_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_guide FOREIGN KEY (guide_id) REFERENCES guides(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'news_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_news FOREIGN KEY (news_id) REFERENCES news(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'user_list_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_user_list FOREIGN KEY (user_list_id) REFERENCES user_lists(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'challenge_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_challenge FOREIGN KEY (challenge_id) REFERENCES challenge(id) ON DELETE CASCADE;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'comments'
+          AND column_name = 'parent_id'
+    ) THEN
+        ALTER TABLE comments
+            ADD CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 ALTER TABLE user_ratings
     ADD CONSTRAINT fk_user_ratings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
