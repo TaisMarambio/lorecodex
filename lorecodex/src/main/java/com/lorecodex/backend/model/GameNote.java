@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 public class GameNote {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false)
