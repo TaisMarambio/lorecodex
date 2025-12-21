@@ -1,5 +1,12 @@
 -- Align schema with current JPA entities
 
+-- Ensure required join tables exist before altering constraints
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id)
+);
+
 -- Drop existing foreign keys to allow renames/type changes
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS fk_user;
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS fk_role;
