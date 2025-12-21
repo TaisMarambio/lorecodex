@@ -1,10 +1,178 @@
 -- Align schema with current JPA entities
 
--- Ensure required join tables exist before altering constraints
+-- Ensure baseline tables exist for older deployments or manual drops
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    email_notifications_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, role_id)
+);
+
+CREATE TABLE IF NOT EXISTS games (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    description TEXT,
+    cover_image TEXT,
+    release_date DATE,
+    release_year INT,
+    release_date_unknown BOOLEAN,
+    rating DOUBLE PRECISION,
+    likes INT,
+    created_at TIMESTAMP NOT NULL,
+    igdb_id BIGINT UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS game_genres (
+    game_id BIGINT NOT NULL,
+    genre TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS game_devs_and_publishers (
+    game_id BIGINT NOT NULL,
+    developer_and_publisher TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS game_tags (
+    game_id BIGINT NOT NULL,
+    tag TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS guides (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    game_id BIGINT,
+    user_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS guide_images (
+    id SERIAL PRIMARY KEY,
+    url TEXT,
+    guide_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    created_at TIMESTAMP,
+    game_id BIGINT,
+    user_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    created_at TIMESTAMP,
+    game_id BIGINT,
+    user_id BIGINT,
+    review_id BIGINT,
+    guide_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS user_ratings (
+    id SERIAL PRIMARY KEY,
+    rating INT,
+    user_id BIGINT,
+    game_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS follows (
+    id SERIAL PRIMARY KEY,
+    follower_id BIGINT NOT NULL,
+    following_id BIGINT NOT NULL,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    message TEXT,
+    created_at TIMESTAMP,
+    read BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS game_notes (
+    id SERIAL PRIMARY KEY,
+    note TEXT,
+    created_at TIMESTAMP,
+    game_id BIGINT,
+    user_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS challenge (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    created_at TIMESTAMP,
+    user_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS challenge_items (
+    id SERIAL PRIMARY KEY,
+    challenge_id BIGINT NOT NULL,
+    game_id BIGINT,
+    item_description TEXT,
+    completed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS challenge_participation (
+    id SERIAL PRIMARY KEY,
+    challenge_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    joined_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS challenge_participation_items (
+    id SERIAL PRIMARY KEY,
+    participation_id BIGINT NOT NULL,
+    challenge_item_id BIGINT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS user_lists (
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    name TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS list_items (
+    id SERIAL PRIMARY KEY,
+    list_id BIGINT NOT NULL,
+    game_id BIGINT,
+    item_type TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS news (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    created_at TIMESTAMP,
+    author_id BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS news_images (
+    id SERIAL PRIMARY KEY,
+    news_id BIGINT NOT NULL,
+    url TEXT
 );
 
 -- Drop existing foreign keys to allow renames/type changes
