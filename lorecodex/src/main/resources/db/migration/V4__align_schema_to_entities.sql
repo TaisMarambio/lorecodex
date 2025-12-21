@@ -225,25 +225,219 @@ ALTER TABLE game_notes ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE challenge ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE challenge_items ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE challenge_participation ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
-ALTER TABLE challenge_participation_items ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge_participation_items'
+          AND column_name = 'id'
+    ) THEN
+        ALTER TABLE challenge_participation_items
+            ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
+    END IF;
+END $$;
 ALTER TABLE user_lists ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE list_items ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE news ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 ALTER TABLE news_images ALTER COLUMN id TYPE BIGINT USING id::BIGINT;
 
 -- Rename columns to match entity mappings
-ALTER TABLE challenge RENAME COLUMN user_id TO creator_id;
-ALTER TABLE challenge_items RENAME COLUMN item_description TO description;
-ALTER TABLE challenge_participation_items RENAME COLUMN challenge_item_id TO item_id;
-ALTER TABLE user_lists RENAME COLUMN name TO title;
-ALTER TABLE list_items RENAME COLUMN list_id TO user_list_id;
-ALTER TABLE list_items RENAME COLUMN item_type TO type;
-ALTER TABLE list_items RENAME COLUMN game_id TO reference_id;
-ALTER TABLE news RENAME COLUMN author_id TO user_id;
-ALTER TABLE news_images RENAME COLUMN url TO image_url;
-ALTER TABLE guide_images RENAME COLUMN url TO image_url;
-ALTER TABLE notifications RENAME COLUMN user_id TO recipient_id;
-ALTER TABLE game_notes RENAME COLUMN note TO content;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge'
+          AND column_name = 'user_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge'
+          AND column_name = 'creator_id'
+    ) THEN
+        ALTER TABLE challenge RENAME COLUMN user_id TO creator_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge_items'
+          AND column_name = 'item_description'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge_items'
+          AND column_name = 'description'
+    ) THEN
+        ALTER TABLE challenge_items RENAME COLUMN item_description TO description;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge_participation_items'
+          AND column_name = 'challenge_item_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'challenge_participation_items'
+          AND column_name = 'item_id'
+    ) THEN
+        ALTER TABLE challenge_participation_items RENAME COLUMN challenge_item_id TO item_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'user_lists'
+          AND column_name = 'name'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'user_lists'
+          AND column_name = 'title'
+    ) THEN
+        ALTER TABLE user_lists RENAME COLUMN name TO title;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'list_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'user_list_id'
+    ) THEN
+        ALTER TABLE list_items RENAME COLUMN list_id TO user_list_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'item_type'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'type'
+    ) THEN
+        ALTER TABLE list_items RENAME COLUMN item_type TO type;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'game_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'list_items'
+          AND column_name = 'reference_id'
+    ) THEN
+        ALTER TABLE list_items RENAME COLUMN game_id TO reference_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'news'
+          AND column_name = 'author_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'news'
+          AND column_name = 'user_id'
+    ) THEN
+        ALTER TABLE news RENAME COLUMN author_id TO user_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'news_images'
+          AND column_name = 'url'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'news_images'
+          AND column_name = 'image_url'
+    ) THEN
+        ALTER TABLE news_images RENAME COLUMN url TO image_url;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'guide_images'
+          AND column_name = 'url'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'guide_images'
+          AND column_name = 'image_url'
+    ) THEN
+        ALTER TABLE guide_images RENAME COLUMN url TO image_url;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'notifications'
+          AND column_name = 'user_id'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'notifications'
+          AND column_name = 'recipient_id'
+    ) THEN
+        ALTER TABLE notifications RENAME COLUMN user_id TO recipient_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'game_notes'
+          AND column_name = 'note'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'game_notes'
+          AND column_name = 'content'
+    ) THEN
+        ALTER TABLE game_notes RENAME COLUMN note TO content;
+    END IF;
+END $$;
 
 -- Add missing columns for entities
 ALTER TABLE challenge ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
